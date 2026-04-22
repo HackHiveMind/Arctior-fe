@@ -11,12 +11,12 @@ interface FeatureCardProps {
 }
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => (
-  <div className="flex gap-4">
-    <div className="text-ark-gold flex-shrink-0 w-14 h-14 rounded-md border border-ark-gold/30 flex items-center justify-center">
+  <div className="flex items-start gap-4">
+    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md border border-ark-gold/30 text-ark-gold sm:h-14 sm:w-14">
       {icon}
     </div>
     <div>
-      <h3 className="text-white text-base md:text-lg font-bold mb-2 uppercase tracking-widest">{title}</h3>
+      <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-white sm:text-base md:text-lg">{title}</h3>
       <p className="text-gray-300 text-sm leading-relaxed">{description}</p>
     </div>
   </div>
@@ -48,17 +48,17 @@ const FeaturesSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-20 px-8 bg-gradient-to-b from-ark-purple to-ark-purple-light">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-10 items-center">
+    <section id="servicii" className="bg-gradient-to-b from-ark-purple to-ark-purple-light px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-10">
           <div className="overflow-hidden rounded-sm border border-ark-gold/20 shadow-2xl shadow-black/30">
             <img
               src={FeatureDeskImage}
               alt="Birou personalizat"
-              className="w-full h-[320px] md:h-[360px] object-cover"
+              className="h-[260px] w-full object-cover sm:h-[320px] md:h-[360px]"
             />
           </div>
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {features.map((feature, idx) => (
               <FeatureCard key={idx} icon={feature.icon} title={feature.title} description={feature.description} />
             ))}

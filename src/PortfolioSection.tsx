@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { categories } from './categoryData';
+import { type Category, getApiErrorMessage, getCategories } from './api';
 
 interface ProductCardProps {
   slug: string;
@@ -9,14 +9,14 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ slug, title, image }) => (
-  <Link to={`/categorie/${slug}`} className="block group relative overflow-hidden cursor-pointer h-56 md:h-64 lg:h-72">
+  <Link to={`/categorie/${slug}`} className="group relative block h-56 cursor-pointer overflow-hidden sm:h-64 lg:h-72">
     <img
       src={image}
       alt={title}
       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
     />
-    <div className="absolute inset-0 bg-gradient-to-t from-ark-purple/90 via-ark-purple/35 to-transparent flex items-end p-5 md:p-6">
-      <h3 className="text-ark-gold text-lg md:text-2xl font-light uppercase tracking-widest border-b border-ark-gold/70 pb-2">
+    <div className="absolute inset-0 flex items-end bg-gradient-to-t from-ark-purple/90 via-ark-purple/35 to-transparent p-4 sm:p-5 md:p-6">
+      <h3 className="border-b border-ark-gold/70 pb-2 text-base font-light uppercase tracking-[0.2em] text-ark-gold sm:text-lg md:text-2xl">
         {title}
       </h3>
     </div>
@@ -24,22 +24,54 @@ const ProductCard: React.FC<ProductCardProps> = ({ slug, title, image }) => (
 );
 
 const PortfolioSection: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCategories = async () => {
+      try {
+        const response = await getCategories();
+        if (!isMounted) {
+          return;
+        }
+
+        setCategories(response);
+        setErrorMessage('');
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setErrorMessage(getApiErrorMessage(error, 'Nu am putut incarca lista de categorii.'));
+      }
+    };
+
+    void loadCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
-    <section className="py-20 px-8 bg-gradient-to-b from-ark-purple-light to-ark-purple">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+    <section id="colectii" className="bg-gradient-to-b from-ark-purple-light to-ark-purple px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 text-center sm:mb-16">
           <h2 className="text-4xl md:text-5xl font-light tracking-widest mb-4 text-white">PROIECTE DE EXCEPȚIE</h2>
           <p className="text-gray-200 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-8">
             Descoperă portofoliul nostru de mobilier personalizat, realizat cu atenție la detalii și finisaje impecabile. Veți mobiliile în care creați și împreună proiectez spații care vorbesc despre dumneavoastră.
           </p>
-          <div className="h-1 w-28 bg-ark-gold mx-auto"></div>
+          <div className="mx-auto h-1 w-24 bg-ark-gold sm:w-28"></div>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {categories.map((cat, idx) => (
             <ProductCard key={idx} slug={cat.slug} title={cat.title} image={cat.image} />
           ))}
         </div>
+        {errorMessage && <p className="mt-8 text-center text-sm text-rose-300">{errorMessage}</p>}
       </div>
     </section>
   );
