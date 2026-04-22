@@ -4,7 +4,7 @@ import { Globe, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 interface ContactInfoProps {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: React.ReactNode;
 }
 
 const ContactInfo: React.FC<ContactInfoProps> = ({ icon, label, value }) => (
@@ -30,12 +30,17 @@ const FooterSectionClean: React.FC = () => {
               SA CREAM IMPREUNA!
             </h2>
             <div className="flex w-full flex-col items-center md:w-fit md:items-end">
-              <ContactInfo icon={<Phone size={18} />} label="Telefon" value="+40 123 456 789" />
-              <ContactInfo icon={<Mail size={18} />} label="Email" value="info@arktiordesign.ro" />
+              <ContactInfo icon={<Phone size={18} />} label="Telefon" value="+373 79 56 53 99" />
+              <ContactInfo icon={<Mail size={18} />} label="Email" value="arktior2025@gmail.com" />
               <ContactInfo
                 icon={<MapPin size={18} />}
                 label="Adresa"
-                value="Str. Exemplu Nr. 100, Bucuresti, Sector 1"
+                value={
+                  <>
+                    <span className="block">Moldova, Chișinău</span>
+                    <span className="block">str. Hanul Morii nr.42</span>
+                  </>
+                }
               />
             </div>
           </div>
