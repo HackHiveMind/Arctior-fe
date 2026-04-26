@@ -2,7 +2,7 @@ import './App.css';
 import { Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import AppNavbar from './AppNavbar';
-import HeroSection from './HeroSection';
+import HeroSection from './HeroSectionEnhanced';
 import FeaturesSection from './FeaturesSection';
 import PortfolioSection from './PortfolioSection';
 import FooterSection from './FooterSectionClean';
