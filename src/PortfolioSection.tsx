@@ -23,15 +23,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ slug, title, image }) => (
   </Link>
 );
 
+const SkeletonCard: React.FC = () => (
+  <div className="relative h-56 overflow-hidden border border-ark-gold/10 bg-white/[0.03] sm:h-64 lg:h-72">
+    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/[0.06] via-white/[0.02] to-transparent" />
+    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 md:p-6">
+      <div className="h-6 w-3/4 bg-ark-gold/20 sm:h-7" />
+    </div>
+  </div>
+);
+
 const PortfolioSection: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadCategories = async () => {
       try {
+        setIsLoading(true);
         const response = await getCategories();
         if (!isMounted) {
           return;
@@ -45,6 +56,10 @@ const PortfolioSection: React.FC = () => {
         }
 
         setErrorMessage(getApiErrorMessage(error, 'Nu am putut incarca lista de categorii.'));
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -67,6 +82,10 @@ const PortfolioSection: React.FC = () => {
         </div>
         
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {isLoading &&
+            Array.from({ length: 6 }, (_, idx) => (
+              <SkeletonCard key={`skeleton-${idx}`} />
+            ))}
           {categories.map((cat, idx) => (
             <ProductCard key={idx} slug={cat.slug} title={cat.title} image={cat.image} />
           ))}
