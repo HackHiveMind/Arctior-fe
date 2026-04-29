@@ -182,7 +182,8 @@ export async function getAuthenticatedUser(token: string): Promise<MeResponse> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  return requestJson<Category[]>('/api/categories');
+  const result = await requestJson<{ data: Category[] }>('/api/categories');
+  return result.data;
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category> {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import siteLogo from './assets/captura_152357.png';
+import siteLogo from '../../assets/captura_152357.png';
 
 const AppNavbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

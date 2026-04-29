@@ -1,16 +1,14 @@
 import './App.css';
 import { Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import AppNavbar from './AppNavbar';
-import HeroSection from './HeroSectionEnhanced';
-import FeaturesSection from './FeaturesSection';
-import PortfolioSection from './PortfolioSection';
-import FooterSection from './FooterSectionClean';
-import CategoryPage from './CategoryPage';
-import AdminAccessPage from './AdminAccessPage';
-import { AdminProvider } from './AdminContext';
-import FloatingAdminButton from './FloatingAdminButton';
-import { ToastProvider } from './ToastContext';
+import AppNavbar from './components/layout/AppNavbar';
+import FooterSection from './components/layout/FooterSectionClean';
+import HomePage from './pages/HomePage';
+import CategoryPage from './pages/CategoryPage';
+import AdminAccessPage from './admin/AdminAccessPage';
+import { AdminProvider } from './admin/AdminContext';
+import FloatingAdminButton from './components/ui/FloatingAdminButton';
+import { ToastProvider } from './context/ToastContext';
 
 function App() {
   const location = useLocation();
@@ -23,16 +21,7 @@ function App() {
           {!isAdminRoute && <AppNavbar />}
           <main>
             <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <HeroSection />
-                    <FeaturesSection />
-                    <PortfolioSection />
-                  </>
-                }
-              />
+              <Route path="/" element={<HomePage />} />
               <Route path="/categorie/:slug" element={<CategoryPage />} />
               <Route path="/admin" element={<AdminAccessPage />} />
               <Route path="/admin/register" element={<AdminAccessPage initialMode="register" />} />

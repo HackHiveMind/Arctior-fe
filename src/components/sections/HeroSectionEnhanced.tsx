@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import HeroBg from './assets/5325936571951290133.jpg';
+import HeroBg from '../../assets/5325936571951290133.jpg';
 
 const HeroSectionEnhanced: React.FC = () => {
   return (

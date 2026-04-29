@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdmin } from './AdminContext';
 import AdminDashboard from './AdminDashboard';
-import { getApiErrorMessage } from './api';
-import adminLogo from './assets/captura_152357.png';
+import { getApiErrorMessage } from '../api/api';
+import adminLogo from '../assets/captura_152357.png';
 
 type AdminAccessPageProps = {
   initialMode?: 'login' | 'register';

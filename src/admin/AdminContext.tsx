@@ -8,7 +8,7 @@ import {
   loginAuth,
   registerAuth,
   setupAuth,
-} from './api';
+} from '../api/api';
 
 interface AdminContextValue {
   needsSetup: boolean | null;

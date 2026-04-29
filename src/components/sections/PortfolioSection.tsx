@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { type Category, getApiErrorMessage, getCategories } from './api';
+import { type Category, getApiErrorMessage, getCategories } from '../../api/api';
 
 interface ProductCardProps {
   slug: string;
@@ -80,7 +80,7 @@ const PortfolioSection: React.FC = () => {
           </p>
           <div className="mx-auto h-1 w-24 bg-ark-gold sm:w-28"></div>
         </div>
-        
+
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {isLoading &&
             Array.from({ length: 6 }, (_, idx) => (

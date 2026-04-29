@@ -4,7 +4,7 @@ import {
   type Category,
   getApiErrorMessage,
   getCategoryBySlug,
-} from './api';
+} from '../api/api';
 
 const CategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();

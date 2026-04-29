@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAdmin } from './AdminContext';
+import { useAdmin } from '../../admin/AdminContext';
 
 const FloatingAdminButton: React.FC = () => {
   const location = useLocation();

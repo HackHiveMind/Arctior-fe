@@ -1,8 +1,8 @@
 import React from 'react';
-import DesignIcon from './assets/captura_151610.png';
-import MaterialIcon from './assets/captura_151639.png';
-import MasteryIcon from './assets/captura_151722.png';
-import FeatureDeskImage from './assets/Captură de ecran 2026-03-31 122033.png';
+import DesignIcon from '../../assets/captura_151610.png';
+import MaterialIcon from '../../assets/captura_151639.png';
+import MasteryIcon from '../../assets/captura_151722.png';
+import FeatureDeskImage from '../../assets/Captură de ecran 2026-03-31 122033.png';
 
 interface FeatureCardProps {
   icon: React.ReactNode;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { type Article, type Category, createArticle, deleteArticle, getApiErrorMessage, getCategories, getCategoryBySlug, isUnauthorizedError, updateArticle, updateCategory, uploadImage } from './api';
+import { type Article, type Category, createArticle, deleteArticle, getApiErrorMessage, getCategories, getCategoryBySlug, isUnauthorizedError, updateArticle, updateCategory, uploadImage } from '../api/api';
 import { useAdmin } from './AdminContext';
-import { useToast } from './ToastContext';
+import { useToast } from '../context/ToastContext';
 
 const AdminDashboard: React.FC = () => {
   const { token, logout, user } = useAdmin();
