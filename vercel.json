@@ -2,6 +2,18 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://arctior-be.onrender.com/api/:path*"
+    },
+    {
+      "source": "/upload",
+      "destination": "https://arctior-be.onrender.com/upload"
+    },
+    {
+      "source": "/upload/:path*",
+      "destination": "https://arctior-be.onrender.com/upload/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
