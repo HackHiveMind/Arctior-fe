@@ -614,8 +614,7 @@ const AdminDashboard: React.FC = () => {
       <section className="rounded-[2rem] border border-ark-gold/20 bg-[radial-gradient(circle_at_top_left,rgba(193,154,107,0.2),transparent_35%),linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-5 shadow-2xl shadow-black/30 sm:p-6 md:p-8">
         <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
-            <p className="text-sm uppercase tracking-[0.35em] text-ark-gold/80">Admin Studio</p>
-            <h2 className="mt-3 text-3xl text-ark-gold sm:text-4xl md:text-5xl">Panou de administrare interactiv</h2>
+            <h2 className="text-3xl text-ark-gold sm:text-4xl md:text-5xl">Panou de administrare interactiv</h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-200 md:text-base">
               Administrezi continutul dintr-un singur loc: alegi categoria, editezi rapid detaliile si pregatesti produse noi cu preview live inainte de publicare.
             </p>

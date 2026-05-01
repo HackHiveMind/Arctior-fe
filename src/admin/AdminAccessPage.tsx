@@ -10,7 +10,7 @@ type AdminAccessPageProps = {
 };
 
 const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login' }) => {
-  const { needsSetup, isAuthenticated, isInitializing, login, registerAdmin, token, user } = useAdmin();
+  const { needsSetup, isAuthenticated, isInitializing, login, registerAdmin } = useAdmin();
   const [authMode, setAuthMode] = useState<'login' | 'register'>(initialMode);
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
@@ -224,11 +224,6 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
             <p className="text-gray-200 max-w-2xl leading-relaxed mb-6">
               Din pagina asta poti edita categoriile si poti adauga produse noi fara sa mai intri pe pagina publica.
             </p>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 mb-8">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-2">Cont curent</p>
-              <p className="text-sm text-white">{user?.username}</p>
-              <p className="mt-2 font-mono break-all text-xs text-white/60">{token}</p>
-            </div>
             <AdminDashboard />
           </>
         )}
