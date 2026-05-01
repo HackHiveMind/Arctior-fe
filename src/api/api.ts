@@ -94,10 +94,30 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
+const DEFAULT_PRODUCTION_API_BASE_URL = 'https://arctior-be.onrender.com';
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
+  (import.meta.env.PROD ? DEFAULT_PRODUCTION_API_BASE_URL : '');
 
 function buildUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
   return `${API_BASE_URL}${path}`;
+}
+
+function parseJsonBody<TBody>(rawBody: string, fallbackMessage: string): TBody | null {
+  if (!rawBody) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawBody) as TBody;
+  } catch {
+    throw new ApiError(fallbackMessage, 502);
+  }
 }
 
 async function requestJson<TResponse>(
@@ -122,7 +142,10 @@ async function requestJson<TResponse>(
   });
 
   const rawBody = await response.text();
-  const parsedBody = rawBody ? (JSON.parse(rawBody) as TResponse | ApiErrorBody) : null;
+  const parsedBody = parseJsonBody<TResponse | ApiErrorBody>(
+    rawBody,
+    'Serverul API nu a returnat JSON. Verifica adresa backend-ului.',
+  );
 
   if (!response.ok) {
     const message =
@@ -245,7 +268,10 @@ export async function deleteArticle(articleSlug: string, token: string): Promise
 
   if (!response.ok) {
     const rawBody = await response.text();
-    const parsedBody = rawBody ? (JSON.parse(rawBody) as ApiErrorBody) : null;
+    const parsedBody = parseJsonBody<ApiErrorBody>(
+      rawBody,
+      'Serverul API nu a returnat JSON. Verifica adresa backend-ului.',
+    );
     const message = parsedBody?.error ?? 'Nu am putut sterge produsul.';
     throw new ApiError(message, response.status);
   }
