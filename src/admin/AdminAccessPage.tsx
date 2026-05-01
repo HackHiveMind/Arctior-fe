@@ -1,45 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdmin } from './AdminContext';
 import AdminDashboard from './AdminDashboard';
 import { getApiErrorMessage } from '../api/api';
 import adminLogo from '../assets/captura_152357.png';
 
-type AdminAccessPageProps = {
-  initialMode?: 'login' | 'register';
-};
-
-const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login' }) => {
-  const { needsSetup, isAuthenticated, isInitializing, login, registerAdmin, token, user } = useAdmin();
-  const [authMode, setAuthMode] = useState<'login' | 'register'>(initialMode);
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
+const AdminAccessPage: React.FC = () => {
+  const { needsSetup, isAuthenticated, isInitializing, login } = useAdmin();
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setAuthMode(initialMode);
-  }, [initialMode]);
-
-  const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    setIsSubmitting(true);
-
-    try {
-      await registerAdmin({
-        email: registerEmail,
-        password: registerPassword,
-      });
-      setErrorMessage('');
-    } catch (error) {
-      setErrorMessage(getApiErrorMessage(error, 'Nu am putut finaliza inregistrarea.'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -78,9 +49,6 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
     );
   }
 
-  const shouldShowRegister = authMode === 'register' || needsSetup;
-  const registrationDisabled = !needsSetup;
-
   return (
       <section className="min-h-screen bg-gradient-to-b from-ark-purple to-ark-purple-light px-4 pb-20 pt-6 sm:px-6 sm:pt-10 lg:px-8">
       <div className={`${isAuthenticated ? 'max-w-7xl' : 'max-w-3xl'} mx-auto rounded-2xl border border-ark-gold/20 bg-black/20 p-6 shadow-2xl shadow-black/30 sm:p-8 md:p-10`}>
@@ -101,89 +69,24 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
           </Link>
         </div>
 
-        {!isAuthenticated && (
-          <div className="mb-8 grid gap-3 sm:flex sm:flex-wrap">
-            <Link
-              to="/admin"
-              onClick={() => {
-                setAuthMode('login');
-                setErrorMessage('');
-              }}
-              className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-[0.25em] transition ${
-                !shouldShowRegister
-                  ? 'bg-ark-gold text-ark-purple'
-                  : 'border border-white/10 bg-white/5 text-white hover:border-ark-gold/40'
-              }`}
-            >
-              Login
-            </Link>
-            <Link
-              to="/admin/register"
-              onClick={() => {
-                setAuthMode('register');
-                setErrorMessage('');
-              }}
-              className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-[0.25em] transition ${
-                shouldShowRegister
-                  ? 'bg-ark-gold text-ark-purple'
-                  : 'border border-white/10 bg-white/5 text-white hover:border-ark-gold/40'
-              }`}
-            >
-              Register
-            </Link>
-          </div>
-        )}
-
-        {shouldShowRegister && !isAuthenticated && (
+        {needsSetup && !isAuthenticated && (
           <>
             <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80 mb-3">Register</p>
             <h1 className="mb-4 text-3xl text-ark-gold sm:text-4xl md:text-5xl">Creeaza contul de admin</h1>
             <p className="text-gray-200 max-w-2xl leading-relaxed mb-8">
-              Creezi primul cont real cu email si parola, apoi intri direct in sesiunea de administrare.
+              Nu exista inca un cont admin configurat. Creeaza primul cont pe pagina dedicata.
             </p>
 
-            {registrationDisabled ? (
-              <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm text-gray-200">
-                  Exista deja un cont admin configurat. Pagina de register este disponibila doar pentru primul cont, iar de aici mergi mai departe cu login.
-                </p>
-                <Link
-                  to="/admin"
-                  onClick={() => setAuthMode('login')}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-ark-gold px-5 py-3 text-sm font-bold uppercase tracking-[0.2em] text-ark-purple transition hover:bg-ark-gold/90"
-                >
-                  Mergi la login
-                </Link>
-              </div>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-4">
-                <input
-                  type="email"
-                  value={registerEmail}
-                  onChange={(event) => setRegisterEmail(event.target.value)}
-                  placeholder="Email"
-                  className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-                />
-                <input
-                  type="password"
-                  value={registerPassword}
-                  onChange={(event) => setRegisterPassword(event.target.value)}
-                  placeholder="Parola"
-                  className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-lg bg-ark-gold px-6 py-3 font-bold uppercase tracking-[0.25em] text-ark-purple transition hover:bg-ark-gold/90"
-                >
-                  {isSubmitting ? 'Se creeaza contul...' : 'Register si intra'}
-                </button>
-              </form>
-            )}
+            <Link
+              to="/admin/register"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-ark-gold px-6 py-3 font-bold uppercase tracking-[0.25em] text-ark-purple transition hover:bg-ark-gold/90"
+            >
+              Mergi la register
+            </Link>
           </>
         )}
 
-        {!shouldShowRegister && !isAuthenticated && (
+        {!needsSetup && !isAuthenticated && (
           <>
             <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80 mb-3">Admin Login</p>
             <h1 className="mb-4 text-3xl text-ark-gold sm:text-4xl md:text-5xl">Autentificare</h1>
@@ -214,6 +117,15 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
                 {isSubmitting ? 'Se autentifica...' : 'Intra in admin'}
               </button>
             </form>
+
+            <div className="mt-6 flex flex-col gap-3 text-sm text-gray-200 sm:flex-row sm:items-center sm:justify-between">
+              <Link to="/admin/recovery" className="text-ark-gold transition hover:text-ark-gold/80">
+                Ai uitat parola?
+              </Link>
+              <Link to="/admin/register" className="text-white/70 transition hover:text-white">
+                Register admin
+              </Link>
+            </div>
           </>
         )}
 
@@ -224,11 +136,6 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
             <p className="text-gray-200 max-w-2xl leading-relaxed mb-6">
               Din pagina asta poti edita categoriile si poti adauga produse noi fara sa mai intri pe pagina publica.
             </p>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 mb-8">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-2">Cont curent</p>
-              <p className="text-sm text-white">{user?.username}</p>
-              <p className="mt-2 font-mono break-all text-xs text-white/60">{token}</p>
-            </div>
             <AdminDashboard />
           </>
         )}

@@ -40,6 +40,21 @@ export interface RegisterPayload {
   password: string;
 }
 
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  password: string;
+}
+
+export interface EmergencyAdminResetPayload {
+  email: string;
+  password: string;
+  recoveryToken: string;
+}
+
 export interface CreateArticlePayload {
   title: string;
   image: string;
@@ -195,6 +210,29 @@ export async function registerAuth(payload: RegisterPayload): Promise<AuthRespon
 
 export async function loginAuth(payload: CredentialsPayload): Promise<AuthResponse> {
   return requestJson<AuthResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function requestPasswordReset(payload: ForgotPasswordPayload): Promise<{ ok: boolean }> {
+  return requestJson<{ ok: boolean }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<{ ok: boolean }> {
+  return requestJson<{ ok: boolean }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function emergencyResetAdmins(
+  payload: EmergencyAdminResetPayload,
+): Promise<{ ok: boolean; user: PublicUser }> {
+  return requestJson<{ ok: boolean; user: PublicUser }>('/api/auth/emergency-reset-admins', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

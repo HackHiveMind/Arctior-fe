@@ -4,7 +4,7 @@ import { useAdmin } from './AdminContext';
 import { useToast } from '../context/ToastContext';
 
 const AdminDashboard: React.FC = () => {
-  const { token, logout, user } = useAdmin();
+  const { token, logout } = useAdmin();
   const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryQuery, setCategoryQuery] = useState('');
@@ -611,40 +611,13 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-ark-gold/20 bg-[radial-gradient(circle_at_top_left,rgba(193,154,107,0.2),transparent_35%),linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-5 shadow-2xl shadow-black/30 sm:p-6 md:p-8">
-        <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-sm uppercase tracking-[0.35em] text-ark-gold/80">Admin Studio</p>
-            <h2 className="mt-3 text-3xl text-ark-gold sm:text-4xl md:text-5xl">Panou de administrare interactiv</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-200 md:text-base">
-              Administrezi continutul dintr-un singur loc: alegi categoria, editezi rapid detaliile si pregatesti produse noi cu preview live inainte de publicare.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/50">Admin</p>
-              <p className="mt-2 break-words text-lg text-white">{user?.username}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/50">Categorii</p>
-              <p className="mt-2 text-lg text-white">{categories.length}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/50">Produse</p>
-              <p className="mt-2 text-lg text-white">{selectedCategory?.articles?.length ?? 0}</p>
-            </div>
-          </div>
+      {(hasCategoryDraftChanges || hasProductDraftChanges) && (
+        <div className="rounded-2xl border border-amber-300/40 bg-amber-300/10 px-5 py-4 text-sm text-amber-100">
+          Ai modificari nesalvate.
+          {hasCategoryDraftChanges && ' Categoria are un draft activ.'}
+          {hasProductDraftChanges && ' Formularul de produs are schimbari in lucru.'}
         </div>
-
-        {(hasCategoryDraftChanges || hasProductDraftChanges) && (
-          <div className="mt-6 rounded-2xl border border-amber-300/40 bg-amber-300/10 px-5 py-4 text-sm text-amber-100">
-            Ai modificari nesalvate.
-            {hasCategoryDraftChanges && ' Categoria are un draft activ.'}
-            {hasProductDraftChanges && ' Formularul de produs are schimbari in lucru.'}
-          </div>
-        )}
-      </section>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="rounded-2xl border border-ark-gold/20 bg-black/20 p-5 shadow-2xl shadow-black/20 sm:p-6 lg:sticky lg:top-28 lg:h-fit">
