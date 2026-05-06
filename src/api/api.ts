@@ -14,6 +14,7 @@ export interface Category {
   title: string;
   image: string;
   description: string;
+  translations?: TranslationMap;
   createdAt: string;
   updatedAt: string;
   articles?: Article[];
@@ -26,9 +27,24 @@ export interface Article {
   title: string;
   image: string;
   description: string;
+  translations?: TranslationMap;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Language {
+  code: string;
+  name: string;
+  isDefault: boolean;
+  isActive: boolean;
+}
+
+export interface TranslationFields {
+  title: string;
+  description: string;
+}
+
+export type TranslationMap = Record<string, TranslationFields>;
 
 export interface CredentialsPayload {
   username: string;
@@ -56,9 +72,10 @@ export interface EmergencyAdminResetPayload {
 }
 
 export interface CreateArticlePayload {
-  title: string;
+  title?: string;
   image: string;
-  description: string;
+  description?: string;
+  translations?: TranslationMap;
   slug?: string;
 }
 
@@ -66,6 +83,14 @@ export interface UpdateArticlePayload {
   title?: string;
   image?: string;
   description?: string;
+  translations?: Partial<Record<string, Partial<TranslationFields>>>;
+}
+
+export interface UpdateCategoryPayload {
+  image?: string;
+  title?: string;
+  description?: string;
+  translations?: Partial<Record<string, Partial<TranslationFields>>>;
 }
 
 interface UploadResponse {
@@ -121,6 +146,15 @@ function buildUrl(path: string): string {
   }
 
   return `${API_BASE_URL}${path}`;
+}
+
+function withLanguage(path: string, languageCode?: string): string {
+  if (!languageCode) {
+    return path;
+  }
+
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}lang=${encodeURIComponent(languageCode)}`;
 }
 
 function parseJsonBody<TBody>(rawBody: string, fallbackMessage: string): TBody | null {
@@ -242,18 +276,22 @@ export async function getAuthenticatedUser(token: string): Promise<MeResponse> {
   return requestJson<MeResponse>('/api/auth/me', {}, token);
 }
 
-export async function getCategories(): Promise<Category[]> {
-  const result = await requestJson<{ data: Category[] }>('/api/categories');
+export async function getLanguages(): Promise<Language[]> {
+  return requestJson<Language[]>('/api/languages');
+}
+
+export async function getCategories(languageCode?: string): Promise<Category[]> {
+  const result = await requestJson<{ data: Category[] }>(withLanguage('/api/categories', languageCode));
   return result.data;
 }
 
-export async function getCategoryBySlug(slug: string): Promise<Category> {
-  return requestJson<Category>(`/api/categories/${encodeURIComponent(slug)}`);
+export async function getCategoryBySlug(slug: string, languageCode?: string): Promise<Category> {
+  return requestJson<Category>(withLanguage(`/api/categories/${encodeURIComponent(slug)}`, languageCode));
 }
 
 export async function updateCategory(
   slug: string,
-  payload: Pick<Category, 'image' | 'description'>,
+  payload: UpdateCategoryPayload,
   token: string,
 ): Promise<Category> {
   return requestJson<Category>(

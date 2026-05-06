@@ -3,6 +3,7 @@ import DesignIcon from '../../assets/captura_151610.png';
 import MaterialIcon from '../../assets/captura_151639.png';
 import MasteryIcon from '../../assets/captura_151722.png';
 import FeatureDeskImage from '../../assets/Captură de ecran 2026-03-31 122033.png';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -23,27 +24,28 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) =
 );
 
 const FeaturesSection: React.FC = () => {
+  const { t } = useLanguage();
   const features = [
     {
       icon: (
         <img src={DesignIcon} alt="Design personalizat" className="w-9 h-9 object-contain" />
       ),
-      title: 'Design Personalizat',
-      description: 'Proiectăm mobilier care se integrează perfect în spațiul tău, reflectând personalitatea și viziunea ta.'
+      title: t('features.design.title'),
+      description: t('features.design.description')
     },
     {
       icon: (
         <img src={MaterialIcon} alt="Materiale premium" className="w-9 h-9 object-contain" />
       ),
-      title: 'Materiale Premium',
-      description: 'Folosim doar lemn masiv, finisaje de lux și accesorii de ultimă generație pentru durabilitate.'
+      title: t('features.materials.title'),
+      description: t('features.materials.description')
     },
     {
       icon: (
         <img src={MasteryIcon} alt="Execuție de maestru" className="w-9 h-9 object-contain" />
       ),
-      title: 'Execuție de Maestru',
-      description: 'Fiecare piesă este lucrată cu atenție milimetrică la detalii de către artizani cu experiență.'
+      title: t('features.mastery.title'),
+      description: t('features.mastery.description')
     }
   ];
 

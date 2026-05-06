@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { type Category, getApiErrorMessage, getCategories } from '../../api/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ProductCardProps {
   slug: string;
@@ -33,6 +34,7 @@ const SkeletonCard: React.FC = () => (
 );
 
 const PortfolioSection: React.FC = () => {
+  const { languageCode, t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,7 @@ const PortfolioSection: React.FC = () => {
     const loadCategories = async () => {
       try {
         setIsLoading(true);
-        const response = await getCategories();
+        const response = await getCategories(languageCode);
         if (!isMounted) {
           return;
         }
@@ -55,7 +57,7 @@ const PortfolioSection: React.FC = () => {
           return;
         }
 
-        setErrorMessage(getApiErrorMessage(error, 'Nu am putut incarca lista de categorii.'));
+        setErrorMessage(getApiErrorMessage(error, t('portfolio.error')));
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -68,15 +70,15 @@ const PortfolioSection: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [languageCode]);
 
   return (
     <section id="colectii" className="bg-gradient-to-b from-ark-purple-light to-ark-purple px-4 py-16 sm:px-6 md:py-20 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 text-center sm:mb-16">
-          <h2 className="text-4xl md:text-5xl font-light tracking-widest mb-4 text-white">PROIECTE DE EXCEPȚIE</h2>
+          <h2 className="text-4xl md:text-5xl font-light tracking-widest mb-4 text-white">{t('portfolio.title')}</h2>
           <p className="text-gray-200 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-8">
-            Descoperă portofoliul nostru de mobilier personalizat, realizat cu atenție la detalii și finisaje impecabile. Veți mobiliile în care creați și împreună proiectez spații care vorbesc despre dumneavoastră.
+            {t('portfolio.description')}
           </p>
           <div className="mx-auto h-1 w-24 bg-ark-gold sm:w-28"></div>
         </div>

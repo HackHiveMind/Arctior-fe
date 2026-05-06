@@ -2,13 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { type Article, type Category, createArticle, deleteArticle, getApiErrorMessage, getCategories, getCategoryBySlug, isUnauthorizedError, updateArticle, updateCategory, uploadImage } from '../api/api';
 import { useAdmin } from './AdminContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelect from '../components/ui/LanguageSelect';
+
+function getTranslationDraft(record: Category | Article, languageCode: string) {
+  return record.translations?.[languageCode] ?? { title: '', description: '' };
+}
 
 const AdminDashboard: React.FC = () => {
   const { token, logout, user } = useAdmin();
   const { showToast } = useToast();
+  const { languages, languageCode: siteLanguageCode } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryQuery, setCategoryQuery] = useState('');
   const [selectedSlug, setSelectedSlug] = useState('');
+  const [editorLanguageCode, setEditorLanguageCode] = useState(siteLanguageCode);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingCategory, setIsLoadingCategory] = useState(false);
@@ -20,6 +28,7 @@ const AdminDashboard: React.FC = () => {
   const [draftImage, setDraftImage] = useState('');
   const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
   const [categoryImagePreviewUrl, setCategoryImagePreviewUrl] = useState('');
+  const [draftTitle, setDraftTitle] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [productTitle, setProductTitle] = useState('');
   const [productSlug, setProductSlug] = useState('');
@@ -37,20 +46,27 @@ const AdminDashboard: React.FC = () => {
   const isEditingProduct = selectedArticleSlug !== '';
   const selectedArticle =
     selectedCategory?.articles?.find((article) => article.slug === selectedArticleSlug) ?? null;
+  const selectedCategoryTranslation = selectedCategory
+    ? getTranslationDraft(selectedCategory, editorLanguageCode)
+    : null;
+  const selectedArticleTranslation = selectedArticle
+    ? getTranslationDraft(selectedArticle, editorLanguageCode)
+    : null;
   const hasCategoryDraftChanges = Boolean(
     selectedCategory &&
       (draftImage.trim() !== selectedCategory.image.trim() ||
-        draftDescription.trim() !== selectedCategory.description.trim() ||
+        draftTitle.trim() !== (selectedCategoryTranslation?.title ?? '').trim() ||
+        draftDescription.trim() !== (selectedCategoryTranslation?.description ?? '').trim() ||
         categoryImageFile),
   );
   const hasProductDraftChanges = isProductFormVisible
     ? isEditingProduct
       ? Boolean(
           selectedArticle &&
-            (productTitle.trim() !== selectedArticle.title.trim() ||
+            (productTitle.trim() !== (selectedArticleTranslation?.title ?? '').trim() ||
               productSlug.trim() !== selectedArticle.slug.trim() ||
               productImage.trim() !== selectedArticle.image.trim() ||
-              productDescription.trim() !== selectedArticle.description.trim() ||
+              productDescription.trim() !== (selectedArticleTranslation?.description ?? '').trim() ||
               productImageFile),
         )
       : Boolean(
@@ -81,7 +97,7 @@ const AdminDashboard: React.FC = () => {
       setIsLoadingCategories(true);
 
       try {
-        const response = await getCategories();
+        const response = await getCategories(editorLanguageCode);
         if (!isMounted) {
           return;
         }
@@ -107,7 +123,7 @@ const AdminDashboard: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [editorLanguageCode]);
 
   useEffect(() => {
     let isMounted = true;
@@ -121,7 +137,7 @@ const AdminDashboard: React.FC = () => {
       setIsLoadingCategory(true);
 
       try {
-        const response = await getCategoryBySlug(selectedSlug);
+        const response = await getCategoryBySlug(selectedSlug, editorLanguageCode);
         if (!isMounted) {
           return;
         }
@@ -129,7 +145,8 @@ const AdminDashboard: React.FC = () => {
         setSelectedCategory(response);
         setDraftImage(response.image);
         setCategoryImageFile(null);
-        setDraftDescription(response.description);
+        setDraftTitle(getTranslationDraft(response, editorLanguageCode).title);
+        setDraftDescription(getTranslationDraft(response, editorLanguageCode).description);
         setCategoryErrorMessage('');
         setCategoryStatusMessage('');
         setProductErrorMessage('');
@@ -160,7 +177,7 @@ const AdminDashboard: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [selectedSlug]);
+  }, [selectedSlug, editorLanguageCode]);
 
   useEffect(() => {
     if (!categoryImageFile) {
@@ -260,12 +277,12 @@ const AdminDashboard: React.FC = () => {
 
     setSelectedArticleSlug(article.slug);
     setIsProductFormVisible(true);
-    setProductTitle(article.title);
+    setProductTitle(getTranslationDraft(article, editorLanguageCode).title);
     setProductSlug(article.slug);
     setProductImage(article.image);
     setProductImageFile(null);
     setProductImagePreviewUrl('');
-    setProductDescription(article.description);
+    setProductDescription(getTranslationDraft(article, editorLanguageCode).description);
     setProductErrorMessage('');
     setProductStatusMessage(`Editezi produsul "${article.title}".`);
   };
@@ -298,10 +315,11 @@ const AdminDashboard: React.FC = () => {
     }
 
     const trimmedImage = draftImage.trim();
+    const trimmedTitle = draftTitle.trim();
     const trimmedDescription = draftDescription.trim();
 
-    if (!trimmedImage || !trimmedDescription) {
-      setCategoryErrorMessage('Completeaza imaginea si descrierea categoriei.');
+    if (!trimmedImage || !trimmedTitle || !trimmedDescription) {
+      setCategoryErrorMessage('Completeaza imaginea, titlul si descrierea categoriei.');
       setCategoryStatusMessage('');
       return;
     }
@@ -313,7 +331,12 @@ const AdminDashboard: React.FC = () => {
         selectedCategory.slug,
         {
           image: trimmedImage,
-          description: trimmedDescription,
+          translations: {
+            [editorLanguageCode]: {
+              title: trimmedTitle,
+              description: trimmedDescription,
+            },
+          },
         },
         token,
       );
@@ -323,10 +346,37 @@ const AdminDashboard: React.FC = () => {
           ? {
               ...currentValue,
               image: updatedCategory.image,
-              description: updatedCategory.description,
+              title: trimmedTitle,
+              description: trimmedDescription,
+              translations: {
+                ...(currentValue.translations ?? {}),
+                [editorLanguageCode]: {
+                  title: trimmedTitle,
+                  description: trimmedDescription,
+                },
+              },
               updatedAt: updatedCategory.updatedAt,
             }
           : currentValue,
+      );
+      setCategories((currentValue) =>
+        currentValue.map((category) =>
+          category.slug === selectedCategory.slug
+            ? {
+                ...category,
+                image: updatedCategory.image,
+                title: trimmedTitle,
+                description: trimmedDescription,
+                translations: {
+                  ...(category.translations ?? {}),
+                  [editorLanguageCode]: {
+                    title: trimmedTitle,
+                    description: trimmedDescription,
+                  },
+                },
+              }
+            : category,
+        ),
       );
       setCategoryStatusMessage('Categoria a fost actualizata.');
       setCategoryErrorMessage('');
@@ -477,9 +527,13 @@ const AdminDashboard: React.FC = () => {
         const updatedArticle = await updateArticle(
           selectedArticleSlug,
           {
-            title: trimmedTitle,
             image: trimmedImage,
-            description: trimmedDescription,
+            translations: {
+              [editorLanguageCode]: {
+                title: trimmedTitle,
+                description: trimmedDescription,
+              },
+            },
           },
           token,
         );
@@ -489,15 +543,28 @@ const AdminDashboard: React.FC = () => {
             ? {
                 ...currentValue,
                 articles: (currentValue.articles ?? []).map((article) =>
-                  article.slug === selectedArticleSlug ? updatedArticle : article,
+                  article.slug === selectedArticleSlug
+                    ? {
+                        ...updatedArticle,
+                        title: trimmedTitle,
+                        description: trimmedDescription,
+                        translations: {
+                          ...(article.translations ?? {}),
+                          [editorLanguageCode]: {
+                            title: trimmedTitle,
+                            description: trimmedDescription,
+                          },
+                        },
+                      }
+                    : article,
                 ),
               }
             : currentValue,
         );
-        setProductTitle(updatedArticle.title);
+        setProductTitle(trimmedTitle);
         setProductSlug(updatedArticle.slug);
         setProductImage(updatedArticle.image);
-        setProductDescription(updatedArticle.description);
+        setProductDescription(trimmedDescription);
         setProductStatusMessage('Produsul a fost actualizat.');
         setProductErrorMessage('');
         showToast({
@@ -509,9 +576,13 @@ const AdminDashboard: React.FC = () => {
         const createdArticle = await createArticle(
           selectedCategory.slug,
           {
-            title: trimmedTitle,
             image: trimmedImage,
-            description: trimmedDescription,
+            translations: {
+              [editorLanguageCode]: {
+                title: trimmedTitle,
+                description: trimmedDescription,
+              },
+            },
             slug: trimmedSlug || undefined,
           },
           token,
@@ -620,10 +691,36 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
               <p className="text-xs uppercase tracking-[0.25em] text-white/50">Admin</p>
               <p className="mt-2 break-words text-lg text-white">{user?.username}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
+              <p className="text-xs uppercase tracking-[0.25em] text-white/50">Limba site</p>
+              <div className="mt-2">
+                <LanguageSelect />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
+              <label className="text-xs uppercase tracking-[0.25em] text-white/50">Limba editata</label>
+              <select
+                value={editorLanguageCode}
+                onChange={(event) => {
+                  if (!confirmDiscardChanges('all')) {
+                    return;
+                  }
+
+                  setEditorLanguageCode(event.target.value);
+                }}
+                className="mt-2 w-full rounded-lg border border-ark-gold/30 bg-black/30 px-3 py-2 text-sm text-white outline-none transition focus:border-ark-gold"
+              >
+                {languages.map((language) => (
+                  <option key={language.code} value={language.code} className="bg-ark-purple text-white">
+                    {language.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
               <p className="text-xs uppercase tracking-[0.25em] text-white/50">Categorii</p>
@@ -759,6 +856,16 @@ const AdminDashboard: React.FC = () => {
                 )}
 
                 <div>
+                  <label className="mb-2 block text-sm uppercase tracking-[0.25em] text-white/60">Title</label>
+                  <input
+                    type="text"
+                    value={draftTitle}
+                    onChange={(event) => setDraftTitle(event.target.value)}
+                    className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white outline-none transition focus:border-ark-gold"
+                  />
+                </div>
+
+                <div>
                   <label className="mb-2 block text-sm uppercase tracking-[0.25em] text-white/60">Description</label>
                   <textarea
                     rows={6}
@@ -798,7 +905,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="mt-5">
                   <p className="text-xs uppercase tracking-[0.25em] text-white/50">{selectedCategory.slug}</p>
-                  <h3 className="mt-2 break-words text-2xl text-ark-gold sm:text-3xl">{selectedCategory.title}</h3>
+                  <h3 className="mt-2 break-words text-2xl text-ark-gold sm:text-3xl">{draftTitle || selectedCategory.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-gray-200">
                     {draftDescription || selectedCategory.description}
                   </p>

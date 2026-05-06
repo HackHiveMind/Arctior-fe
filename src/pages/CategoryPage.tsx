@@ -5,9 +5,11 @@ import {
   getApiErrorMessage,
   getCategoryBySlug,
 } from '../api/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const CategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { languageCode, t } = useLanguage();
   const [category, setCategory] = useState<Category | null | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -24,7 +26,7 @@ const CategoryPage: React.FC = () => {
       setErrorMessage('');
 
       try {
-        const nextCategory = await getCategoryBySlug(slug);
+        const nextCategory = await getCategoryBySlug(slug, languageCode);
         if (!isMounted) {
           return;
         }
@@ -37,7 +39,7 @@ const CategoryPage: React.FC = () => {
         }
 
         setCategory(null);
-        setErrorMessage(getApiErrorMessage(error, 'Nu am putut incarca categoria.'));
+        setErrorMessage(getApiErrorMessage(error, t('category.errorFallback')));
       }
     };
 
@@ -46,7 +48,7 @@ const CategoryPage: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, languageCode]);
 
   if (category === undefined) {
     return null;
@@ -60,10 +62,10 @@ const CategoryPage: React.FC = () => {
             to="/"
             className="inline-block mb-8 text-ark-gold border border-ark-gold/40 px-4 py-2 rounded hover:bg-ark-gold hover:text-ark-purple transition"
           >
-            Inapoi la categorii
+            {t('category.back')}
           </Link>
-          <p className="text-sm uppercase tracking-[0.3em] text-rose-300 mb-3">Eroare</p>
-          <h1 className="mb-4 text-3xl text-ark-gold sm:text-4xl md:text-5xl">Categoria nu a putut fi incarcata</h1>
+          <p className="text-sm uppercase tracking-[0.3em] text-rose-300 mb-3">{t('category.error')}</p>
+          <h1 className="mb-4 text-3xl text-ark-gold sm:text-4xl md:text-5xl">{t('category.errorTitle')}</h1>
           <p className="text-gray-200">{errorMessage}</p>
         </div>
       </section>
@@ -81,7 +83,7 @@ const CategoryPage: React.FC = () => {
           to="/"
           className="inline-block mb-8 text-ark-gold border border-ark-gold/40 px-4 py-2 rounded hover:bg-ark-gold hover:text-ark-purple transition"
         >
-          Inapoi la categorii
+          {t('category.back')}
         </Link>
 
         <div className="overflow-hidden rounded-sm border border-ark-gold/20 shadow-2xl shadow-black/30 mb-8">
@@ -94,8 +96,8 @@ const CategoryPage: React.FC = () => {
 
         <div className="mt-12">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80">Produse</p>
-            <h2 className="mt-2 text-2xl text-ark-gold sm:text-3xl">Produse din categorie</h2>
+            <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80">{t('category.products')}</p>
+            <h2 className="mt-2 text-2xl text-ark-gold sm:text-3xl">{t('category.productsTitle')}</h2>
           </div>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
@@ -115,7 +117,7 @@ const CategoryPage: React.FC = () => {
           </div>
 
           {(category.articles ?? []).length === 0 && (
-            <p className="mt-8 text-sm text-gray-300">Nu exista produse in aceasta categorie momentan.</p>
+            <p className="mt-8 text-sm text-gray-300">{t('category.empty')}</p>
           )}
         </div>
       </div>

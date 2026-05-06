@@ -9,6 +9,7 @@ import AdminAccessPage from './admin/AdminAccessPage';
 import { AdminProvider } from './admin/AdminContext';
 import FloatingAdminButton from './components/ui/FloatingAdminButton';
 import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   const location = useLocation();
@@ -17,19 +18,21 @@ function App() {
   return (
     <AdminProvider>
       <ToastProvider>
-        <div className="min-h-screen bg-gradient-to-b from-ark-purple to-ark-purple-light text-white font-sans overflow-x-hidden">
-          {!isAdminRoute && <AppNavbar />}
-          <main>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/categorie/:slug" element={<CategoryPage />} />
-              <Route path="/admin" element={<AdminAccessPage />} />
-              <Route path="/admin/register" element={<AdminAccessPage initialMode="register" />} />
-            </Routes>
-            <FooterSection />
-          </main>
-          {!isAdminRoute && <FloatingAdminButton />}
-        </div>
+        <LanguageProvider>
+          <div className="min-h-screen bg-gradient-to-b from-ark-purple to-ark-purple-light text-white font-sans overflow-x-hidden">
+            {!isAdminRoute && <AppNavbar />}
+            <main>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/categorie/:slug" element={<CategoryPage />} />
+                <Route path="/admin" element={<AdminAccessPage />} />
+                <Route path="/admin/register" element={<AdminAccessPage initialMode="register" />} />
+              </Routes>
+              <FooterSection />
+            </main>
+            {!isAdminRoute && <FloatingAdminButton />}
+          </div>
+        </LanguageProvider>
       </ToastProvider>
     </AdminProvider>
   );

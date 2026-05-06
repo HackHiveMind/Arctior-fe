@@ -1,5 +1,6 @@
 import React from 'react';
 import { Globe, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ContactInfoProps {
   icon: React.ReactNode;
@@ -18,6 +19,8 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ icon, label, value }) => (
 );
 
 const FooterSectionClean: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <footer
       id="contact"
@@ -27,14 +30,14 @@ const FooterSectionClean: React.FC = () => {
         <div className="mb-12 flex justify-center md:mb-16 md:justify-end">
           <div className="flex w-full max-w-xl flex-col items-center md:ml-auto md:w-fit md:max-w-full md:items-end">
             <h2 className="mb-8 text-center text-2xl font-light italic tracking-wide md:text-right md:text-3xl">
-              SA CREAM IMPREUNA!
+              {t('footer.cta')}
             </h2>
             <div className="flex w-full flex-col items-center md:w-fit md:items-end">
-              <ContactInfo icon={<Phone size={18} />} label="Telefon" value="+373 79 56 53 99" />
-              <ContactInfo icon={<Mail size={18} />} label="Email" value="arktior2025@gmail.com" />
+              <ContactInfo icon={<Phone size={18} />} label={t('footer.phone')} value="+373 79 56 53 99" />
+              <ContactInfo icon={<Mail size={18} />} label={t('footer.email')} value="arktior2025@gmail.com" />
               <ContactInfo
                 icon={<MapPin size={18} />}
-                label="Adresa"
+                label={t('footer.address')}
                 value={
                   <>
                     <span className="block">Moldova, Chișinău</span>
@@ -48,7 +51,7 @@ const FooterSectionClean: React.FC = () => {
 
         <div className="flex flex-col items-center justify-between gap-8 border-t border-white/10 pt-8 md:flex-row">
           <p className="text-center text-xs text-gray-400 md:text-left">
-            © 2024 ARKTIOR Design. Toate drepturile rezervate.
+            © 2024 ARKTIOR Design. {t('footer.rights')}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <a href="#" className="text-gray-400 transition hover:text-ark-gold">
