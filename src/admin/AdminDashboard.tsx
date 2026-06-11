@@ -4,6 +4,7 @@ import { useAdmin } from './AdminContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSelect from '../components/ui/LanguageSelect';
+import { buildProductImageDraft } from './productImageDraft';
 
 function getTranslationDraft(record: Category | Article, languageCode: string) {
   return record.translations?.[languageCode] ?? { title: '', description: '' };
@@ -30,12 +31,9 @@ const AdminDashboard: React.FC = () => {
   const [categoryImagePreviewUrl, setCategoryImagePreviewUrl] = useState('');
   const [draftTitle, setDraftTitle] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
-  const [productTitle, setProductTitle] = useState('');
-  const [productSlug, setProductSlug] = useState('');
   const [productImage, setProductImage] = useState('');
   const [productImageFile, setProductImageFile] = useState<File | null>(null);
   const [productImagePreviewUrl, setProductImagePreviewUrl] = useState('');
-  const [productDescription, setProductDescription] = useState('');
   const [selectedArticleSlug, setSelectedArticleSlug] = useState('');
   const [isProductFormVisible, setIsProductFormVisible] = useState(false);
   const [isSavingCategory, setIsSavingCategory] = useState(false);
@@ -49,9 +47,6 @@ const AdminDashboard: React.FC = () => {
   const selectedCategoryTranslation = selectedCategory
     ? getTranslationDraft(selectedCategory, editorLanguageCode)
     : null;
-  const selectedArticleTranslation = selectedArticle
-    ? getTranslationDraft(selectedArticle, editorLanguageCode)
-    : null;
   const hasCategoryDraftChanges = Boolean(
     selectedCategory &&
       (draftImage.trim() !== selectedCategory.image.trim() ||
@@ -63,19 +58,9 @@ const AdminDashboard: React.FC = () => {
     ? isEditingProduct
       ? Boolean(
           selectedArticle &&
-            (productTitle.trim() !== (selectedArticleTranslation?.title ?? '').trim() ||
-              productSlug.trim() !== selectedArticle.slug.trim() ||
-              productImage.trim() !== selectedArticle.image.trim() ||
-              productDescription.trim() !== (selectedArticleTranslation?.description ?? '').trim() ||
-              productImageFile),
+            (productImage.trim() !== selectedArticle.image.trim() || productImageFile),
         )
-      : Boolean(
-          productTitle.trim() ||
-            productSlug.trim() ||
-            productImage.trim() ||
-            productDescription.trim() ||
-            productImageFile,
-        )
+      : Boolean(productImage.trim() || productImageFile)
     : false;
 
   const filteredCategories = categories.filter((category) => {
@@ -153,11 +138,8 @@ const AdminDashboard: React.FC = () => {
         setProductStatusMessage('');
         setSelectedArticleSlug('');
         setIsProductFormVisible(false);
-        setProductTitle('');
-        setProductSlug('');
         setProductImage('');
         setProductImageFile(null);
-        setProductDescription('');
       } catch (error) {
         if (!isMounted) {
           return;
@@ -242,12 +224,9 @@ const AdminDashboard: React.FC = () => {
 
   const resetProductDraft = () => {
     setSelectedArticleSlug('');
-    setProductTitle('');
-    setProductSlug('');
     setProductImage('');
     setProductImageFile(null);
     setProductImagePreviewUrl('');
-    setProductDescription('');
     setProductErrorMessage('');
     setProductStatusMessage('');
   };
@@ -277,14 +256,11 @@ const AdminDashboard: React.FC = () => {
 
     setSelectedArticleSlug(article.slug);
     setIsProductFormVisible(true);
-    setProductTitle(getTranslationDraft(article, editorLanguageCode).title);
-    setProductSlug(article.slug);
     setProductImage(article.image);
     setProductImageFile(null);
     setProductImagePreviewUrl('');
-    setProductDescription(getTranslationDraft(article, editorLanguageCode).description);
     setProductErrorMessage('');
-    setProductStatusMessage(`Editezi produsul "${article.title}".`);
+    setProductStatusMessage('Editezi poza selectata.');
   };
 
   const handleUnauthorized = (error: unknown) => {
@@ -467,7 +443,7 @@ const AdminDashboard: React.FC = () => {
     }
 
     if (!productImageFile) {
-      setProductErrorMessage('Selecteaza o imagine pentru produs inainte de upload.');
+      setProductErrorMessage('Selecteaza o poza inainte de upload.');
       setProductStatusMessage('');
       return;
     }
@@ -477,25 +453,25 @@ const AdminDashboard: React.FC = () => {
     try {
       const uploadedUrl = await uploadImage(productImageFile, token);
       setProductImage(uploadedUrl);
-      setProductStatusMessage('Imaginea produsului a fost incarcata.');
+      setProductStatusMessage('Poza a fost incarcata.');
       setProductErrorMessage('');
       setProductImageFile(null);
       showToast({
         variant: 'success',
-        title: 'Imagine produs incarcata',
-        description: 'Imaginea produsului este gata pentru salvare.',
+        title: 'Poza incarcata',
+        description: 'Imaginea este gata pentru salvare.',
       });
     } catch (error) {
       if (handleUnauthorized(error)) {
         return;
       }
 
-      const message = getApiErrorMessage(error, 'Nu am putut incarca imaginea produsului.');
+      const message = getApiErrorMessage(error, 'Nu am putut incarca poza.');
       setProductErrorMessage(message);
       setProductStatusMessage('');
       showToast({
         variant: 'error',
-        title: 'Upload produs esuat',
+        title: 'Upload poza esuat',
         description: message,
       });
     } finally {
@@ -509,13 +485,10 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    const trimmedTitle = productTitle.trim();
-    const trimmedSlug = productSlug.trim();
     const trimmedImage = productImage.trim();
-    const trimmedDescription = productDescription.trim();
 
-    if (!trimmedTitle || !trimmedImage || !trimmedDescription) {
-      setProductErrorMessage('Completeaza title, image si description pentru produs.');
+    if (!trimmedImage) {
+      setProductErrorMessage('Incarca sau selecteaza o imagine pentru poza.');
       setProductStatusMessage('');
       return;
     }
@@ -523,6 +496,13 @@ const AdminDashboard: React.FC = () => {
     setIsCreatingProduct(true);
 
     try {
+      const productDraft = buildProductImageDraft({
+        categoryTitle: selectedCategory.title,
+        articleCount: selectedCategory.articles?.length ?? 0,
+        existingTitle: selectedArticle ? getTranslationDraft(selectedArticle, editorLanguageCode).title : '',
+        existingDescription: selectedArticle ? getTranslationDraft(selectedArticle, editorLanguageCode).description : '',
+      });
+
       if (isEditingProduct) {
         const updatedArticle = await updateArticle(
           selectedArticleSlug,
@@ -530,8 +510,8 @@ const AdminDashboard: React.FC = () => {
             image: trimmedImage,
             translations: {
               [editorLanguageCode]: {
-                title: trimmedTitle,
-                description: trimmedDescription,
+                title: productDraft.title,
+                description: productDraft.description,
               },
             },
           },
@@ -546,13 +526,13 @@ const AdminDashboard: React.FC = () => {
                   article.slug === selectedArticleSlug
                     ? {
                         ...updatedArticle,
-                        title: trimmedTitle,
-                        description: trimmedDescription,
+                        title: productDraft.title,
+                        description: productDraft.description,
                         translations: {
                           ...(article.translations ?? {}),
                           [editorLanguageCode]: {
-                            title: trimmedTitle,
-                            description: trimmedDescription,
+                            title: productDraft.title,
+                            description: productDraft.description,
                           },
                         },
                       }
@@ -561,16 +541,13 @@ const AdminDashboard: React.FC = () => {
               }
             : currentValue,
         );
-        setProductTitle(trimmedTitle);
-        setProductSlug(updatedArticle.slug);
         setProductImage(updatedArticle.image);
-        setProductDescription(trimmedDescription);
-        setProductStatusMessage('Produsul a fost actualizat.');
+        setProductStatusMessage('Poza a fost actualizata.');
         setProductErrorMessage('');
         showToast({
           variant: 'success',
-          title: 'Produs actualizat',
-          description: `Modificarile pentru ${updatedArticle.title} au fost salvate.`,
+          title: 'Poza actualizata',
+          description: 'Imaginea a fost salvata.',
         });
       } else {
         const createdArticle = await createArticle(
@@ -579,11 +556,10 @@ const AdminDashboard: React.FC = () => {
             image: trimmedImage,
             translations: {
               [editorLanguageCode]: {
-                title: trimmedTitle,
-                description: trimmedDescription,
+                title: productDraft.title,
+                description: productDraft.description,
               },
             },
-            slug: trimmedSlug || undefined,
           },
           token,
         );
@@ -598,11 +574,11 @@ const AdminDashboard: React.FC = () => {
         );
         resetProductDraft();
         setIsProductFormVisible(true);
-        setProductStatusMessage('Produsul a fost adaugat.');
+        setProductStatusMessage('Poza a fost adaugata.');
         showToast({
           variant: 'success',
-          title: 'Produs adaugat',
-          description: `Produsul ${createdArticle.title} a fost creat.`,
+          title: 'Poza adaugata',
+          description: 'Imaginea a fost adaugata in categorie.',
         });
       }
     } catch (error) {
@@ -612,7 +588,7 @@ const AdminDashboard: React.FC = () => {
 
       const message = getApiErrorMessage(
         error,
-        isEditingProduct ? 'Nu am putut actualiza produsul.' : 'Nu am putut adauga produsul.',
+        isEditingProduct ? 'Nu am putut actualiza poza.' : 'Nu am putut adauga poza.',
       );
       setProductErrorMessage(
         message,
@@ -620,7 +596,7 @@ const AdminDashboard: React.FC = () => {
       setProductStatusMessage('');
       showToast({
         variant: 'error',
-        title: isEditingProduct ? 'Actualizare esuata' : 'Creare esuata',
+        title: isEditingProduct ? 'Actualizare esuata' : 'Adaugare esuata',
         description: message,
       });
     } finally {
@@ -634,7 +610,7 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!window.confirm(`Stergi produsul "${article.title}"?`)) {
+    if (!window.confirm('Stergi poza selectata?')) {
       return;
     }
 
@@ -656,19 +632,19 @@ const AdminDashboard: React.FC = () => {
         setIsProductFormVisible(false);
       }
 
-      setProductStatusMessage(`Produsul "${article.title}" a fost sters.`);
+      setProductStatusMessage('Poza a fost stearsa.');
       setProductErrorMessage('');
       showToast({
         variant: 'success',
-        title: 'Produs sters',
-        description: `${article.title} a fost eliminat din categorie.`,
+        title: 'Poza stearsa',
+        description: 'Imaginea a fost eliminata din categorie.',
       });
     } catch (error) {
       if (handleUnauthorized(error)) {
         return;
       }
 
-      const message = getApiErrorMessage(error, 'Nu am putut sterge produsul.');
+      const message = getApiErrorMessage(error, 'Nu am putut sterge poza.');
       setProductErrorMessage(message);
       showToast({
         variant: 'error',
@@ -687,7 +663,7 @@ const AdminDashboard: React.FC = () => {
           <div className="max-w-3xl">
             <h2 className="text-3xl text-ark-gold sm:text-4xl md:text-5xl">Panou de administrare interactiv</h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-200 md:text-base">
-              Administrezi continutul dintr-un singur loc: alegi categoria, editezi rapid detaliile si pregatesti produse noi cu preview live inainte de publicare.
+              Administrezi continutul dintr-un singur loc: alegi categoria, schimbi imaginea principala si adaugi poze noi cu preview live inainte de publicare.
             </p>
           </div>
 
@@ -727,7 +703,7 @@ const AdminDashboard: React.FC = () => {
               <p className="mt-2 text-lg text-white">{categories.length}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/50">Produse</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-white/50">Poze</p>
               <p className="mt-2 text-lg text-white">{selectedCategory?.articles?.length ?? 0}</p>
             </div>
           </div>
@@ -737,7 +713,7 @@ const AdminDashboard: React.FC = () => {
           <div className="mt-6 rounded-2xl border border-amber-300/40 bg-amber-300/10 px-5 py-4 text-sm text-amber-100">
             Ai modificari nesalvate.
             {hasCategoryDraftChanges && ' Categoria are un draft activ.'}
-            {hasProductDraftChanges && ' Formularul de produs are schimbari in lucru.'}
+            {hasProductDraftChanges && ' Formularul de poza are schimbari in lucru.'}
           </div>
         )}
       </section>
@@ -802,7 +778,7 @@ const AdminDashboard: React.FC = () => {
                 {selectedCategory ? `Editezi ${selectedCategory.title}` : 'Alege o categorie'}
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-200">
-                Selectezi categoria din stanga, actualizezi detaliile ei si alegi direct produsul pe care vrei sa-l editezi.
+                Selectezi categoria din stanga, actualizezi imaginea principala si adaugi poze in galerie.
               </p>
             </div>
 
@@ -812,7 +788,7 @@ const AdminDashboard: React.FC = () => {
                 <p className="mt-2 text-lg text-white">{selectedCategory?.title ?? 'Neselectata'}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-white/50">Produse</p>
+                <p className="text-xs uppercase tracking-[0.25em] text-white/50">Poze</p>
                 <p className="mt-2 text-lg text-white">{selectedCategory?.articles?.length ?? 0}</p>
               </div>
             </div>
@@ -920,9 +896,9 @@ const AdminDashboard: React.FC = () => {
         <div className="rounded-2xl border border-ark-gold/20 bg-black/20 p-5 shadow-2xl shadow-black/20 sm:p-6 md:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80">Produse</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80">Poze</p>
               <h3 className="mt-2 text-2xl text-ark-gold sm:text-3xl">
-                {selectedCategory ? `Produse din ${selectedCategory.title}` : 'Produse din categoria selectata'}
+                {selectedCategory ? `Poze din ${selectedCategory.title}` : 'Poze din categoria selectata'}
               </h3>
             </div>
             <button
@@ -931,13 +907,13 @@ const AdminDashboard: React.FC = () => {
               disabled={!selectedCategory || isLoadingCategory}
               className="w-full rounded-lg border border-ark-gold/40 px-5 py-3 text-sm font-bold uppercase tracking-[0.2em] text-ark-gold transition hover:bg-ark-gold hover:text-ark-purple disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
-              Produs nou
+              Poza noua
             </button>
           </div>
 
           {!isProductFormVisible && (
             <p className="mt-4 text-sm text-gray-300">
-              Alege un produs din lista ca sa-l editezi sau apasa pe `Produs nou`.
+              Alege o poza din lista ca sa o editezi sau apasa pe Poza noua.
             </p>
           )}
 
@@ -948,7 +924,7 @@ const AdminDashboard: React.FC = () => {
             <p className="mt-4 text-sm text-rose-300">{productErrorMessage}</p>
           )}
 
-          {isLoadingCategory && <p className="mt-6 text-sm text-gray-300">Se incarca produsele...</p>}
+          {isLoadingCategory && <p className="mt-6 text-sm text-gray-300">Se incarca pozele...</p>}
 
           {!isLoadingCategory && selectedCategory && (selectedCategory.articles ?? []).length > 0 && (
             <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -964,13 +940,11 @@ const AdminDashboard: React.FC = () => {
                   <img src={article.image} alt={article.title} className="h-48 w-full object-cover sm:h-56" />
                   <div className="p-5">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-xs uppercase tracking-[0.25em] text-ark-gold/70">{article.slug}</p>
+                      <p className="text-xs uppercase tracking-[0.25em] text-ark-gold/70">Poza galerie</p>
                       <span className="text-[11px] uppercase tracking-[0.25em] text-emerald-200">
                         {selectedArticleSlug === article.slug ? 'Selectat' : 'Editeaza'}
                       </span>
                     </div>
-                    <h3 className="mb-3 break-words text-xl text-ark-gold sm:text-2xl">{article.title}</h3>
-                    <p className="text-sm leading-relaxed text-gray-200">{article.description}</p>
                     <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <button
                         type="button"
@@ -997,7 +971,7 @@ const AdminDashboard: React.FC = () => {
           )}
 
           {selectedCategory && (selectedCategory.articles ?? []).length === 0 && (
-            <p className="mt-6 text-sm text-gray-300">Categoria selectata nu are produse momentan.</p>
+            <p className="mt-6 text-sm text-gray-300">Categoria selectata nu are poze momentan.</p>
           )}
         </div>
 
@@ -1006,9 +980,9 @@ const AdminDashboard: React.FC = () => {
             <div className="rounded-2xl border border-ark-gold/20 bg-black/20 p-5 shadow-2xl shadow-black/20 sm:p-6 md:p-8">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80">Editor produs</p>
+                  <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80">Editor poza</p>
                   <h3 className="mt-2 text-2xl text-ark-gold sm:text-3xl">
-                    {isEditingProduct ? 'Editeaza produsul selectat' : 'Adauga produs nou'}
+                    {isEditingProduct ? 'Schimba poza selectata' : 'Adauga poza noua'}
                   </h3>
                 </div>
                 <button
@@ -1021,41 +995,6 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="mt-6 space-y-5">
-                {isEditingProduct && (
-                  <div className="rounded-2xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-200">
-                    Editezi produsul cu slug-ul <span className="font-semibold">{selectedArticleSlug}</span>.
-                  </div>
-                )}
-
-                <div>
-                  <label className="mb-2 block text-sm uppercase tracking-[0.25em] text-white/60">Title</label>
-                  <input
-                    type="text"
-                    value={productTitle}
-                    onChange={(event) => setProductTitle(event.target.value)}
-                    className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white outline-none transition focus:border-ark-gold"
-                  />
-                </div>
-
-                {isEditingProduct ? (
-                  <div>
-                    <p className="mb-2 block text-sm uppercase tracking-[0.25em] text-white/60">Slug</p>
-                    <div className="rounded-lg border border-ark-gold/30 bg-white/5 px-4 py-3 text-sm text-white">
-                      {productSlug}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="mb-2 block text-sm uppercase tracking-[0.25em] text-white/60">Slug optional</label>
-                    <input
-                      type="text"
-                      value={productSlug}
-                      onChange={(event) => setProductSlug(event.target.value)}
-                      className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white outline-none transition focus:border-ark-gold"
-                    />
-                  </div>
-                )}
-
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <input
                     type="file"
@@ -1077,19 +1016,9 @@ const AdminDashboard: React.FC = () => {
 
                 {productImagePreviewUrl && (
                   <div className="overflow-hidden rounded-xl border border-ark-gold/20">
-                    <img src={productImagePreviewUrl} alt="Preview produs" className="h-40 w-full object-cover sm:h-48" />
+                    <img src={productImagePreviewUrl} alt="Preview poza" className="h-40 w-full object-cover sm:h-48" />
                   </div>
                 )}
-
-                <div>
-                  <label className="mb-2 block text-sm uppercase tracking-[0.25em] text-white/60">Description</label>
-                  <textarea
-                    rows={5}
-                    value={productDescription}
-                    onChange={(event) => setProductDescription(event.target.value)}
-                    className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white outline-none transition focus:border-ark-gold"
-                  />
-                </div>
 
                 <button
                   type="button"
@@ -1104,8 +1033,8 @@ const AdminDashboard: React.FC = () => {
                       ? 'Se salveaza...'
                       : 'Se adauga...'
                     : isEditingProduct
-                      ? 'Salveaza produsul'
-                      : 'Add Product'}
+                      ? 'Salveaza poza'
+                      : 'Adauga poza'}
                 </button>
               </div>
 
@@ -1114,24 +1043,15 @@ const AdminDashboard: React.FC = () => {
             </div>
 
           <div className="rounded-2xl border border-ark-gold/20 bg-black/20 p-5 shadow-2xl shadow-black/20 sm:p-6">
-              <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80 mb-3">Preview produs</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-ark-gold/80 mb-3">Preview poza</p>
               <div className="overflow-hidden rounded-2xl border border-ark-gold/20">
                 <div className="flex h-56 items-center justify-center bg-white/5 text-sm text-white/50 sm:h-64">
                   {productImagePreviewUrl || productImage ? (
-                    <img src={productImagePreviewUrl || productImage} alt={productTitle || 'Produs nou'} className="h-full w-full object-cover" />
+                    <img src={productImagePreviewUrl || productImage} alt="Preview poza" className="h-full w-full object-cover" />
                   ) : (
-                    'Preview imagine produs'
+                    'Preview poza'
                   )}
                 </div>
-              </div>
-              <div className="mt-5">
-                <p className="text-xs uppercase tracking-[0.25em] text-white/50">
-                  {productSlug || 'slug-generat-automat'}
-                </p>
-                <h3 className="mt-2 break-words text-xl text-ark-gold sm:text-2xl">{productTitle || 'Titlu produs nou'}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-200">
-                  {productDescription || 'Descrierea produsului va aparea aici inainte de salvare.'}
-                </p>
               </div>
             </div>
           </div>
