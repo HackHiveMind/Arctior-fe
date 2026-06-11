@@ -106,12 +106,7 @@ const CategoryPage: React.FC = () => {
                 key={article.id}
                 className="overflow-hidden rounded-2xl border border-ark-gold/20 bg-black/20 shadow-2xl shadow-black/20"
               >
-                <img src={article.image} alt={article.title} className="h-56 w-full object-cover" />
-                <div className="p-5">
-                  <p className="text-xs uppercase tracking-[0.25em] text-ark-gold/70 mb-2">{article.slug}</p>
-                  <h3 className="mb-3 text-xl text-ark-gold sm:text-2xl">{article.title}</h3>
-                  <p className="text-sm leading-relaxed text-gray-200">{article.description}</p>
-                </div>
+                <img src={article.image} alt="" className="h-64 w-full object-cover sm:h-72" />
               </article>
             ))}
           </div>
