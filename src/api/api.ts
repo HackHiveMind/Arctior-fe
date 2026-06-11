@@ -135,6 +135,7 @@ export class ApiError extends Error {
 }
 
 const DEFAULT_PRODUCTION_API_BASE_URL = 'https://arctior-be.onrender.com';
+const HIDDEN_CATEGORY_SLUGS = new Set(['birouri', 'canapele', 'dressinguri']);
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
@@ -282,10 +283,14 @@ export async function getLanguages(): Promise<Language[]> {
 
 export async function getCategories(languageCode?: string): Promise<Category[]> {
   const result = await requestJson<{ data: Category[] }>(withLanguage('/api/categories', languageCode));
-  return result.data;
+  return result.data.filter((category) => !HIDDEN_CATEGORY_SLUGS.has(category.slug));
 }
 
 export async function getCategoryBySlug(slug: string, languageCode?: string): Promise<Category> {
+  if (HIDDEN_CATEGORY_SLUGS.has(slug)) {
+    throw new ApiError('Categoria nu a fost gasita.', 404);
+  }
+
   return requestJson<Category>(withLanguage(`/api/categories/${encodeURIComponent(slug)}`, languageCode));
 }
 
