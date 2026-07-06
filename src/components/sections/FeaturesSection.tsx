@@ -2,7 +2,7 @@ import React from 'react';
 import DesignIcon from '../../assets/captura_151610.png';
 import MaterialIcon from '../../assets/captura_151639.png';
 import MasteryIcon from '../../assets/captura_151722.png';
-import FeatureDeskImage from '../../assets/Captură de ecran 2026-03-31 122033.png';
+import FeatureDeskImage from '../../assets/hero-secondary.png';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface FeatureCardProps {
@@ -28,21 +28,21 @@ const FeaturesSection: React.FC = () => {
   const features = [
     {
       icon: (
-        <img src={DesignIcon} alt="Design personalizat" className="w-9 h-9 object-contain" />
+        <img src={DesignIcon} alt="" width={36} height={36} loading="lazy" decoding="async" className="w-9 h-9 object-contain" />
       ),
       title: t('features.design.title'),
       description: t('features.design.description')
     },
     {
       icon: (
-        <img src={MaterialIcon} alt="Materiale premium" className="w-9 h-9 object-contain" />
+        <img src={MaterialIcon} alt="" width={36} height={36} loading="lazy" decoding="async" className="w-9 h-9 object-contain" />
       ),
       title: t('features.materials.title'),
       description: t('features.materials.description')
     },
     {
       icon: (
-        <img src={MasteryIcon} alt="Execuție de maestru" className="w-9 h-9 object-contain" />
+        <img src={MasteryIcon} alt="" width={36} height={36} loading="lazy" decoding="async" className="w-9 h-9 object-contain" />
       ),
       title: t('features.mastery.title'),
       description: t('features.mastery.description')
@@ -57,12 +57,16 @@ const FeaturesSection: React.FC = () => {
             <img
               src={FeatureDeskImage}
               alt="Birou personalizat"
+              width={800}
+              height={600}
+              loading="lazy"
+              decoding="async"
               className="h-[260px] w-full object-cover sm:h-[320px] md:h-[360px]"
             />
           </div>
           <div className="space-y-6 sm:space-y-8">
-            {features.map((feature, idx) => (
-              <FeatureCard key={idx} icon={feature.icon} title={feature.title} description={feature.description} />
+            {features.map((feature) => (
+              <FeatureCard key={feature.title} icon={feature.icon} title={feature.title} description={feature.description} />
             ))}
           </div>
         </div>

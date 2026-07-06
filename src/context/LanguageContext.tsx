@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { type Language, getLanguages } from '../api/api';
 import i18n, { languageStorageKey, type TranslationKey } from '../i18n';
 
@@ -40,7 +41,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         setLanguages(response);
-        if (!response.some((language) => language.code === languageCode)) {
+        const currentLanguage = readStoredLanguage();
+        if (!response.some((language) => language.code === currentLanguage)) {
           const fallbackCode = response.find((language) => language.isDefault)?.code ?? response[0].code;
           setLanguageCodeState(fallbackCode);
           window.localStorage.setItem(languageStorageKey, fallbackCode);
@@ -56,14 +58,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => {
       isMounted = false;
     };
-  }, [languageCode]);
+  }, []);
 
-  const setLanguageCode = (code: string) => {
+  const setLanguageCode = useCallback((code: string) => {
     setLanguageCodeState(code);
     window.localStorage.setItem(languageStorageKey, code);
     document.documentElement.lang = code;
     void i18n.changeLanguage(code);
-  };
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = languageCode;
@@ -76,7 +78,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLanguageCode,
       t: (key: TranslationKey) => i18n.t(key),
     }),
-    [languages, languageCode],
+    [languages, languageCode, setLanguageCode],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

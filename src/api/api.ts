@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 export interface PublicUser {
   id: string;
   username: string;
@@ -113,7 +111,9 @@ interface MeResponse {
 }
 
 interface ApiErrorBody {
+  code?: string;
   error?: string;
+  message?: string;
 }
 
 function isUploadResponse(value: unknown): value is UploadResponse {
@@ -128,14 +128,31 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    public readonly body?: ApiErrorBody | null,
   ) {
     super(message);
     this.name = 'ApiError';
   }
 }
 
-const DEFAULT_PRODUCTION_API_BASE_URL = 'https://arctior-be.onrender.com';
+const DEFAULT_PRODUCTION_API_BASE_URL = 'https://arctior-be.vercel.app';
+const DEFAULT_ERROR_MESSAGE = 'A aparut o eroare. Te rugam sa incerci din nou.';
 const HIDDEN_CATEGORY_SLUGS = new Set(['birouri', 'canapele', 'dressinguri']);
+
+const ERROR_MESSAGES: Record<string, string> = {
+  INVALID_CREDENTIALS: 'Email sau parola incorecta.',
+  USER_NOT_FOUND: 'Utilizatorul nu a fost gasit.',
+  EMAIL_ALREADY_EXISTS: 'Exista deja un cont cu acest email.',
+  WEAK_PASSWORD: 'Parola este prea slaba.',
+  TOKEN_EXPIRED: 'Sesiunea a expirat. Te rugam sa te autentifici din nou.',
+  INVALID_TOKEN: 'Token invalid sau expirat.',
+  RATE_LIMITED: 'Prea multe incercari. Te rugam sa astepti cateva minute.',
+  VALIDATION_ERROR: 'Datele introduse sunt invalide.',
+  CATEGORY_NOT_FOUND: 'Categoria nu a fost gasita.',
+  ARTICLE_NOT_FOUND: 'Produsul nu a fost gasit.',
+  FORBIDDEN: 'Nu ai permisiunea pentru aceasta actiune.',
+  INTERNAL_ERROR: DEFAULT_ERROR_MESSAGE,
+};
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
@@ -170,7 +187,7 @@ function parseJsonBody<TBody>(rawBody: string, fallbackMessage: string): TBody |
   }
 }
 
-async function requestJson<TResponse>(
+export async function requestJson<TResponse>(
   path: string,
   init: RequestInit = {},
   token?: string | null,
@@ -191,6 +208,10 @@ async function requestJson<TResponse>(
     headers,
   });
 
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
+
   const rawBody = await response.text();
   const parsedBody = parseJsonBody<TResponse | ApiErrorBody>(
     rawBody,
@@ -198,15 +219,21 @@ async function requestJson<TResponse>(
   );
 
   if (!response.ok) {
-    const message =
-      parsedBody && typeof parsedBody === 'object' && 'error' in parsedBody && parsedBody.error
-        ? parsedBody.error
-        : 'A aparut o eroare la comunicarea cu serverul.';
+    const errorBody = parsedBody && typeof parsedBody === 'object' ? (parsedBody as ApiErrorBody) : null;
+    const message = getSafeApiMessage(errorBody);
 
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, response.status, errorBody);
   }
 
   return parsedBody as TResponse;
+}
+
+function getSafeApiMessage(body: ApiErrorBody | null): string {
+  if (body && typeof body === 'object' && typeof body.code === 'string' && body.code in ERROR_MESSAGES) {
+    return ERROR_MESSAGES[body.code];
+  }
+
+  return DEFAULT_ERROR_MESSAGE;
 }
 
 export function getApiErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -214,11 +241,7 @@ export function getApiErrorMessage(error: unknown, fallbackMessage: string): str
     return error.message;
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return fallbackMessage;
+  return fallbackMessage || DEFAULT_ERROR_MESSAGE;
 }
 
 export function isUnauthorizedError(error: unknown): boolean {
@@ -288,7 +311,7 @@ export async function getCategories(languageCode?: string): Promise<Category[]> 
 
 export async function getCategoryBySlug(slug: string, languageCode?: string): Promise<Category> {
   if (HIDDEN_CATEGORY_SLUGS.has(slug)) {
-    throw new ApiError('Categoria nu a fost gasita.', 404);
+    throw new ApiError(ERROR_MESSAGES.CATEGORY_NOT_FOUND, 404, { code: 'CATEGORY_NOT_FOUND' });
   }
 
   return requestJson<Category>(withLanguage(`/api/categories/${encodeURIComponent(slug)}`, languageCode));
@@ -340,22 +363,7 @@ export async function updateArticle(
 }
 
 export async function deleteArticle(articleSlug: string, token: string): Promise<void> {
-  const response = await fetch(buildUrl(`/api/articles/${encodeURIComponent(articleSlug)}`), {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const rawBody = await response.text();
-    const parsedBody = parseJsonBody<ApiErrorBody>(
-      rawBody,
-      'Serverul API nu a returnat JSON. Verifica adresa backend-ului.',
-    );
-    const message = parsedBody?.error ?? 'Nu am putut sterge produsul.';
-    throw new ApiError(message, response.status);
-  }
+  await requestJson<void>(`/api/articles/${encodeURIComponent(articleSlug)}`, { method: 'DELETE' }, token);
 }
 
 export async function uploadImage(file: File, token: string): Promise<string> {
@@ -363,36 +371,35 @@ export async function uploadImage(file: File, token: string): Promise<string> {
   const formData = new FormData();
   formData.append('image', file);
 
-  try {
-    const response = await axios.post<UploadResponse>(buildUrl(uploadEndpoint), formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const uploadedUrl = isUploadResponse(response.data)
-      ? response.data.url ?? response.data.imageUrl ?? response.data.path
-      : undefined;
-
-    if (!uploadedUrl) {
-      throw new ApiError('Serverul nu a returnat URL-ul imaginii incarcate.', 500);
-    }
-
-    return uploadedUrl;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const message =
-        typeof error.response?.data === 'object' &&
-        error.response?.data &&
-        'error' in error.response.data &&
-        typeof error.response.data.error === 'string'
-          ? error.response.data.error
-          : 'Nu am putut incarca imaginea.';
-
-      throw new ApiError(message, error.response?.status ?? 500);
-    }
-
-    throw error;
+  const headers = new Headers();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
+
+  const response = await fetch(buildUrl(uploadEndpoint), {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  const rawBody = await response.text();
+  const parsedBody = parseJsonBody<UploadResponse | ApiErrorBody>(
+    rawBody,
+    'Serverul API nu a returnat JSON. Verifica adresa backend-ului.',
+  );
+
+  if (!response.ok) {
+    const errorBody = parsedBody && typeof parsedBody === 'object' ? (parsedBody as ApiErrorBody) : null;
+    throw new ApiError(getSafeApiMessage(errorBody), response.status, errorBody);
+  }
+
+  const uploadedUrl = isUploadResponse(parsedBody)
+    ? parsedBody.url ?? parsedBody.imageUrl ?? parsedBody.path
+    : undefined;
+
+  if (!uploadedUrl) {
+    throw new ApiError('Serverul nu a returnat URL-ul imaginii incarcate.', 500);
+  }
+
+  return uploadedUrl;
 }

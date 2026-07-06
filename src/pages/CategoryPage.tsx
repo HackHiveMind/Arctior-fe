@@ -48,7 +48,7 @@ const CategoryPage: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [slug, languageCode]);
+  }, [slug, languageCode, t]);
 
   if (category === undefined) {
     return null;
@@ -76,6 +76,8 @@ const CategoryPage: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  const articles = category.articles ?? [];
+
   return (
     <section className="min-h-screen bg-gradient-to-b from-ark-purple to-ark-purple-light px-4 pb-20 pt-28 sm:px-6 lg:px-8 lg:pt-32">
       <div className="mx-auto max-w-6xl">
@@ -87,7 +89,7 @@ const CategoryPage: React.FC = () => {
         </Link>
 
         <div className="overflow-hidden rounded-sm border border-ark-gold/20 shadow-2xl shadow-black/30 mb-8">
-          <img src={category.image} alt={category.title} className="h-64 w-full object-cover sm:h-[340px] md:h-[480px]" />
+          <img src={category.image} alt={category.title} width={1200} height={640} decoding="async" className="h-64 w-full object-cover sm:h-[340px] md:h-[480px]" />
         </div>
 
         <h1 className="mb-4 break-words text-3xl text-ark-gold sm:text-4xl md:text-6xl">{category.title}</h1>
@@ -101,17 +103,17 @@ const CategoryPage: React.FC = () => {
           </div>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
-            {(category.articles ?? []).map((article) => (
+            {articles.map((article) => (
               <article
                 key={article.id}
                 className="overflow-hidden rounded-2xl border border-ark-gold/20 bg-black/20 shadow-2xl shadow-black/20"
               >
-                <img src={article.image} alt="" className="h-64 w-full object-cover sm:h-72" />
+                <img src={article.image} alt="" width={480} height={320} loading="lazy" decoding="async" className="h-64 w-full object-cover sm:h-72" />
               </article>
             ))}
           </div>
 
-          {(category.articles ?? []).length === 0 && (
+          {articles.length === 0 && (
             <p className="mt-8 text-sm text-gray-300">{t('category.empty')}</p>
           )}
         </div>

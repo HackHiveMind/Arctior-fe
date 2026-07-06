@@ -12,6 +12,10 @@ const HeroSectionEnhanced: React.FC = () => {
         <img
           src={HeroBg}
           alt="Interior lux"
+          width={1200}
+          height={800}
+          loading="eager"
+          decoding="async"
           className="h-full w-full object-cover object-[68%_center] sm:object-right"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-ark-purple via-ark-purple/70 to-transparent" />

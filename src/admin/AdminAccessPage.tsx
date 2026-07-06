@@ -4,6 +4,7 @@ import { useAdmin } from './AdminContext';
 import AdminDashboard from './AdminDashboard';
 import { getApiErrorMessage } from '../api/api';
 import adminLogo from '../assets/captura_152357.png';
+import { type FormErrors, loginSchema, registerSchema, toFormErrors } from '../lib/validators';
 
 type AdminAccessPageProps = {
   initialMode?: 'login' | 'register';
@@ -17,6 +18,7 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -26,14 +28,22 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const validation = registerSchema.safeParse({
+      email: registerEmail,
+      password: registerPassword,
+    });
+
+    if (!validation.success) {
+      setFieldErrors(toFormErrors(validation.error));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await registerAdmin({
-        email: registerEmail,
-        password: registerPassword,
-      });
+      await registerAdmin(validation.data);
       setErrorMessage('');
+      setFieldErrors({});
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, 'Nu am putut finaliza inregistrarea.'));
     } finally {
@@ -44,14 +54,22 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const validation = loginSchema.safeParse({
+      username: loginUsername,
+      password: loginPassword,
+    });
+
+    if (!validation.success) {
+      setFieldErrors(toFormErrors(validation.error));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await login({
-        username: loginUsername,
-        password: loginPassword,
-      });
+      await login(validation.data);
       setErrorMessage('');
+      setFieldErrors({});
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, 'Nu am putut face autentificarea.'));
     } finally {
@@ -156,21 +174,34 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
                 </Link>
               </div>
             ) : (
-              <form onSubmit={handleRegister} className="space-y-4">
-                <input
-                  type="email"
-                  value={registerEmail}
-                  onChange={(event) => setRegisterEmail(event.target.value)}
-                  placeholder="Email"
-                  className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-                />
-                <input
-                  type="password"
-                  value={registerPassword}
-                  onChange={(event) => setRegisterPassword(event.target.value)}
-                  placeholder="Parola"
-                  className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-                />
+              <form onSubmit={handleRegister} className="space-y-4" noValidate>
+                <div>
+                  <label htmlFor="register-email" className="mb-2 block text-sm text-gray-200">Email</label>
+                  <input
+                    id="register-email"
+                    type="email"
+                    value={registerEmail}
+                    onChange={(event) => setRegisterEmail(event.target.value)}
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
+                    className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+                  />
+                  {fieldErrors.email && <p id="register-email-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.email}</p>}
+                </div>
+                <div>
+                  <label htmlFor="register-password" className="mb-2 block text-sm text-gray-200">Parola</label>
+                  <input
+                    id="register-password"
+                    type="password"
+                    minLength={12}
+                    value={registerPassword}
+                    onChange={(event) => setRegisterPassword(event.target.value)}
+                    aria-invalid={Boolean(fieldErrors.password)}
+                    aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
+                    className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+                  />
+                  {fieldErrors.password && <p id="register-password-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.password}</p>}
+                </div>
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -191,21 +222,33 @@ const AdminAccessPage: React.FC<AdminAccessPageProps> = ({ initialMode = 'login'
               Introdu emailul sau username-ul si parola pentru a activa modul de editare in frontend.
             </p>
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <input
-                type="text"
-                value={loginUsername}
-                onChange={(event) => setLoginUsername(event.target.value)}
-                placeholder="Email sau username"
-                className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-              />
-              <input
-                type="password"
-                value={loginPassword}
-                onChange={(event) => setLoginPassword(event.target.value)}
-                placeholder="Parola"
-                className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-              />
+            <form onSubmit={handleLogin} className="space-y-4" noValidate>
+              <div>
+                <label htmlFor="login-username" className="mb-2 block text-sm text-gray-200">Email sau username</label>
+                <input
+                  id="login-username"
+                  type="text"
+                  value={loginUsername}
+                  onChange={(event) => setLoginUsername(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.username)}
+                  aria-describedby={fieldErrors.username ? 'login-username-error' : undefined}
+                  className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+                />
+                {fieldErrors.username && <p id="login-username-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.username}</p>}
+              </div>
+              <div>
+                <label htmlFor="login-password" className="mb-2 block text-sm text-gray-200">Parola</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
+                  className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+                />
+                {fieldErrors.password && <p id="login-password-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.password}</p>}
+              </div>
               <button
                 type="submit"
                 disabled={isSubmitting}

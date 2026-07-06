@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import siteLogo from '../../assets/captura_152357.png';
 import LanguageSelect from '../ui/LanguageSelect';
@@ -19,7 +20,7 @@ const AppNavbar: React.FC = () => {
       </div>
 
       <div className="hidden items-center gap-8 text-xs uppercase tracking-widest md:flex">
-        <a href="/" className="nav-link hover:text-ark-gold">{t('nav.home')}</a>
+        <Link to="/" className="nav-link hover:text-ark-gold">{t('nav.home')}</Link>
         <a href="/#colectii" className="nav-link hover:text-ark-gold">{t('nav.collections')}</a>
         <a href="/#servicii" className="nav-link hover:text-ark-gold">{t('nav.services')}</a>
         <a href="/#contact" className="nav-link hover:text-ark-gold">{t('nav.contact')}</a>
@@ -29,14 +30,17 @@ const AppNavbar: React.FC = () => {
         type="button"
         className="text-ark-gold md:hidden"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
+        aria-label={isOpen ? 'Inchide meniul' : 'Deschide meniul'}
+        aria-expanded={isOpen}
+        aria-controls="mobile-nav"
       >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
+        {isOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full border-b border-ark-gold/20 bg-ark-purple/95 shadow-2xl shadow-black/30 md:hidden">
+        <div id="mobile-nav" className="absolute left-0 right-0 top-full border-b border-ark-gold/20 bg-ark-purple/95 shadow-2xl shadow-black/30 md:hidden">
         <div className="flex flex-col gap-4 px-4 py-4 sm:px-6">
-          <a href="/" onClick={() => setIsOpen(false)} className="nav-link w-fit text-sm uppercase hover:text-ark-gold">{t('nav.home')}</a>
+          <Link to="/" onClick={() => setIsOpen(false)} className="nav-link w-fit text-sm uppercase hover:text-ark-gold">{t('nav.home')}</Link>
           <a href="/#colectii" onClick={() => setIsOpen(false)} className="nav-link w-fit text-sm uppercase hover:text-ark-gold">{t('nav.collections')}</a>
           <a href="/#servicii" onClick={() => setIsOpen(false)} className="nav-link w-fit text-sm uppercase hover:text-ark-gold">{t('nav.services')}</a>
           <a href="/#contact" onClick={() => setIsOpen(false)} className="nav-link w-fit text-sm uppercase hover:text-ark-gold">{t('nav.contact')}</a>
