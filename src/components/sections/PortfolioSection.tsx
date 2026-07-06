@@ -14,6 +14,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ slug, title, image }) => (
     <img
       src={image}
       alt={title}
+      width={480}
+      height={288}
+      loading="lazy"
+      decoding="async"
       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
     />
     <div className="absolute inset-0 flex items-end bg-gradient-to-t from-ark-purple/90 via-ark-purple/35 to-transparent p-4 sm:p-5 md:p-6">
@@ -70,7 +74,7 @@ const PortfolioSection: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [languageCode]);
+  }, [languageCode, t]);
 
   return (
     <section id="colectii" className="bg-gradient-to-b from-ark-purple-light to-ark-purple px-4 py-16 sm:px-6 md:py-20 lg:px-8">
@@ -88,8 +92,8 @@ const PortfolioSection: React.FC = () => {
             Array.from({ length: 6 }, (_, idx) => (
               <SkeletonCard key={`skeleton-${idx}`} />
             ))}
-          {categories.map((cat, idx) => (
-            <ProductCard key={idx} slug={cat.slug} title={cat.title} image={cat.image} />
+          {categories.map((cat) => (
+            <ProductCard key={cat.id || cat.slug} slug={cat.slug} title={cat.title} image={cat.image} />
           ))}
         </div>
         {errorMessage && <p className="mt-8 text-center text-sm text-rose-300">{errorMessage}</p>}

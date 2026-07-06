@@ -2,20 +2,30 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiErrorMessage, requestPasswordReset } from '../api/api';
 import adminLogo from '../assets/captura_152357.png';
+import { type FormErrors, recoverySchema, toFormErrors } from '../lib/validators';
 
 const AdminRecoveryPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleForgotPassword = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const validation = recoverySchema.safeParse({ email });
+
+    if (!validation.success) {
+      setFieldErrors(toFormErrors(validation.error));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await requestPasswordReset({ email });
+      await requestPasswordReset(validation.data);
       setErrorMessage('');
+      setFieldErrors({});
       setSuccessMessage('Daca emailul exista, am trimis un link de resetare a parolei.');
     } catch (error) {
       setSuccessMessage('');
@@ -51,14 +61,20 @@ const AdminRecoveryPage: React.FC = () => {
           Introdu emailul contului de admin si iti trimitem un link temporar pentru parola noua.
         </p>
 
-        <form onSubmit={handleForgotPassword} className="space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Email admin"
-            className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-          />
+        <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
+          <div>
+            <label htmlFor="recovery-email" className="mb-2 block text-sm text-gray-200">Email admin</label>
+            <input
+              id="recovery-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? 'recovery-email-error' : undefined}
+              className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+            />
+            {fieldErrors.email && <p id="recovery-email-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.email}</p>}
+          </div>
           <button
             type="submit"
             disabled={isSubmitting}

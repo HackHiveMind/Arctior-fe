@@ -2,29 +2,40 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { emergencyResetAdmins, getApiErrorMessage } from '../api/api';
 import adminLogo from '../assets/captura_152357.png';
+import { type FormErrors, emergencyResetSchema, toFormErrors } from '../lib/validators';
+
+const CONFIRM_PHRASE = 'STERGE TOTI ADMINII';
 
 const AdminEmergencyResetPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [recoveryToken, setRecoveryToken] = useState('');
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!confirmed) {
-      setErrorMessage('Confirma ca vrei sa stergi userii admin existenti.');
+    const validation = emergencyResetSchema.safeParse({ email, password, recoveryToken, confirmText });
+
+    if (!validation.success) {
+      setFieldErrors(toFormErrors(validation.error));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await emergencyResetAdmins({ email, password, recoveryToken });
+      const response = await emergencyResetAdmins({
+        email: validation.data.email,
+        password: validation.data.password,
+        recoveryToken: validation.data.recoveryToken,
+      });
       setErrorMessage('');
+      setFieldErrors({});
       setSuccessMessage(`Admin resetat: ${response.user.username}. Acum poti intra cu parola noua.`);
     } catch (error) {
       setSuccessMessage('');
@@ -60,40 +71,65 @@ const AdminEmergencyResetPage: React.FC = () => {
           Foloseste pagina asta doar daca nu mai stii contul de admin. Actiunea sterge toti userii admin existenti si creeaza unul nou.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Email admin nou"
-            className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Parola noua"
-            className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-          />
-          <input
-            type="password"
-            value={recoveryToken}
-            onChange={(event) => setRecoveryToken(event.target.value)}
-            placeholder="ADMIN_RECOVERY_TOKEN"
-            className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-          />
-          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-gray-200">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div>
+            <label htmlFor="emergency-email" className="mb-2 block text-sm text-gray-200">Email admin nou</label>
             <input
-              type="checkbox"
-              checked={confirmed}
-              onChange={(event) => setConfirmed(event.target.checked)}
-              className="mt-1"
+              id="emergency-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? 'emergency-email-error' : undefined}
+              className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
             />
-            Confirm ca vreau sa sterg userii admin existenti si sa creez acest admin nou.
-          </label>
+            {fieldErrors.email && <p id="emergency-email-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.email}</p>}
+          </div>
+          <div>
+            <label htmlFor="emergency-password" className="mb-2 block text-sm text-gray-200">Parola noua</label>
+            <input
+              id="emergency-password"
+              type="password"
+              minLength={12}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={fieldErrors.password ? 'emergency-password-error' : undefined}
+              className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+            />
+            {fieldErrors.password && <p id="emergency-password-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.password}</p>}
+          </div>
+          <div>
+            <label htmlFor="emergency-token" className="mb-2 block text-sm text-gray-200">Recovery token</label>
+            <input
+              id="emergency-token"
+              type="password"
+              value={recoveryToken}
+              onChange={(event) => setRecoveryToken(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.recoveryToken)}
+              aria-describedby={fieldErrors.recoveryToken ? 'emergency-token-error' : undefined}
+              className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+            />
+            {fieldErrors.recoveryToken && <p id="emergency-token-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.recoveryToken}</p>}
+          </div>
+          <div>
+            <label htmlFor="emergency-confirm" className="mb-2 block text-sm text-gray-200">
+              Scrie exact: <span className="font-mono text-rose-200">{CONFIRM_PHRASE}</span>
+            </label>
+            <input
+              id="emergency-confirm"
+              type="text"
+              value={confirmText}
+              onChange={(event) => setConfirmText(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.confirmText)}
+              aria-describedby={fieldErrors.confirmText ? 'emergency-confirm-error' : undefined}
+              className="w-full rounded-lg border border-rose-300/40 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-rose-200"
+            />
+            {fieldErrors.confirmText && <p id="emergency-confirm-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.confirmText}</p>}
+          </div>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || confirmText !== CONFIRM_PHRASE}
             className="w-full rounded-lg bg-rose-300 px-6 py-3 font-bold uppercase tracking-[0.25em] text-ark-purple transition hover:bg-rose-200 disabled:opacity-60"
           >
             {isSubmitting ? 'Se reseteaza...' : 'Reseteaza adminii'}

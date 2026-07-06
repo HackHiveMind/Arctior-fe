@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getApiErrorMessage, resetPassword } from '../api/api';
 import adminLogo from '../assets/captura_152357.png';
+import { type FormErrors, resetPasswordSchema, toFormErrors } from '../lib/validators';
 
 const AdminResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -10,6 +11,7 @@ const AdminResetPasswordPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -20,16 +22,18 @@ const AdminResetPasswordPage: React.FC = () => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setErrorMessage('Parolele nu coincid.');
+    const validation = resetPasswordSchema.safeParse({ password, confirmPassword });
+    if (!validation.success) {
+      setFieldErrors(toFormErrors(validation.error));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await resetPassword({ token, password });
+      await resetPassword({ token, password: validation.data.password });
       setErrorMessage('');
+      setFieldErrors({});
       setSuccessMessage('Parola a fost schimbata. Poti intra acum in admin.');
     } catch (error) {
       setSuccessMessage('');
@@ -65,21 +69,35 @@ const AdminResetPasswordPage: React.FC = () => {
           Alege o parola noua pentru contul de admin.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Parola noua"
-            className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-          />
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Repeta parola"
-            className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
-          />
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div>
+            <label htmlFor="reset-password" className="mb-2 block text-sm text-gray-200">Parola noua</label>
+            <input
+              id="reset-password"
+              type="password"
+              minLength={12}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={fieldErrors.password ? 'reset-password-error' : undefined}
+              className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+            />
+            {fieldErrors.password && <p id="reset-password-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.password}</p>}
+          </div>
+          <div>
+            <label htmlFor="reset-confirm-password" className="mb-2 block text-sm text-gray-200">Repeta parola</label>
+            <input
+              id="reset-confirm-password"
+              type="password"
+              minLength={12}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              aria-invalid={Boolean(fieldErrors.confirmPassword)}
+              aria-describedby={fieldErrors.confirmPassword ? 'reset-confirm-password-error' : undefined}
+              className="w-full rounded-lg border border-ark-gold/30 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none transition focus:border-ark-gold"
+            />
+            {fieldErrors.confirmPassword && <p id="reset-confirm-password-error" role="alert" className="mt-2 text-sm text-rose-300">{fieldErrors.confirmPassword}</p>}
+          </div>
           <button
             type="submit"
             disabled={isSubmitting}

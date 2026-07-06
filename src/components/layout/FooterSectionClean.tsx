@@ -54,14 +54,14 @@ const FooterSectionClean: React.FC = () => {
             © 2024 ARKTIOR Design. {t('footer.rights')}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <a href="#" className="text-gray-400 transition hover:text-ark-gold">
-              <Globe size={18} />
+            <a href="https://arctior.com" aria-label="Viziteaza site-ul Arctior" className="text-gray-300 transition hover:text-ark-gold">
+              <Globe size={18} aria-hidden="true" />
             </a>
-            <a href="#" className="text-gray-400 transition hover:text-ark-gold">
-              <MessageCircle size={18} />
+            <a href="tel:+37379565399" aria-label="Suna la Arctior" className="text-gray-300 transition hover:text-ark-gold">
+              <MessageCircle size={18} aria-hidden="true" />
             </a>
-            <a href="#" className="text-gray-400 transition hover:text-ark-gold">
-              <Send size={18} />
+            <a href="mailto:arktior2025@gmail.com" aria-label="Trimite email catre Arctior" className="text-gray-300 transition hover:text-ark-gold">
+              <Send size={18} aria-hidden="true" />
             </a>
           </div>
         </div>
