@@ -1,6 +1,7 @@
 import React from 'react';
 import { Globe, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import ContactQuestionForm from '../ui/ContactQuestionForm';
 
 interface ContactInfoProps {
   icon: React.ReactNode;
@@ -9,9 +10,9 @@ interface ContactInfoProps {
 }
 
 const ContactInfo: React.FC<ContactInfoProps> = ({ icon, label, value }) => (
-  <div className="mb-6 flex w-full max-w-sm items-start justify-center gap-4 text-center md:ml-auto md:w-fit md:max-w-full md:flex-row-reverse md:justify-end md:text-right">
+  <div className="flex items-start gap-4">
     <div className="mt-1 text-ark-gold">{icon}</div>
-    <div className="break-words text-center md:text-right">
+    <div className="min-w-0 break-words">
       <p className="text-xs uppercase tracking-widest text-ark-gold/90">{label}</p>
       <p className="text-sm text-gray-200">{value}</p>
     </div>
@@ -27,25 +28,34 @@ const FooterSectionClean: React.FC = () => {
       className="border-t border-ark-gold/20 bg-gradient-to-b from-ark-purple-light to-ark-purple px-4 py-16 sm:px-6 lg:px-8"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-12 flex justify-center md:mb-16 md:justify-end">
-          <div className="flex w-full max-w-xl flex-col items-center md:ml-auto md:w-fit md:max-w-full md:items-end">
-            <h2 className="mb-8 text-center text-2xl font-light italic tracking-wide md:text-right md:text-3xl">
-              {t('footer.cta')}
-            </h2>
-            <div className="flex w-full flex-col items-center md:w-fit md:items-end">
+        <div className="mb-14 grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(360px,520px)] lg:items-start lg:gap-16">
+          <div className="max-w-xl">
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-ark-gold/80">{t('contactForm.eyebrow')}</p>
+            <h2 className="text-3xl text-ark-gold sm:text-4xl">{t('contactForm.title')}</h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-gray-200 sm:text-base">
+              {t('contactForm.description')}
+            </p>
+
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
               <ContactInfo icon={<Phone size={18} />} label={t('footer.phone')} value="+373 79 56 53 99" />
               <ContactInfo icon={<Mail size={18} />} label={t('footer.email')} value="arktior2025@gmail.com" />
-              <ContactInfo
-                icon={<MapPin size={18} />}
-                label={t('footer.address')}
-                value={
-                  <>
-                    <span className="block">Moldova, Chișinău</span>
-                    <span className="block">str. Hanul Morii nr.42</span>
-                  </>
-                }
-              />
+              <div className="sm:col-span-2 lg:col-span-1">
+                <ContactInfo
+                  icon={<MapPin size={18} />}
+                  label={t('footer.address')}
+                  value={
+                    <>
+                      <span className="block">Moldova, Chișinău</span>
+                      <span className="block">str. Hanul Morii nr.42</span>
+                    </>
+                  }
+                />
+              </div>
             </div>
+          </div>
+
+          <div className="w-full max-w-xl lg:ml-auto">
+            <ContactQuestionForm />
           </div>
         </div>
 

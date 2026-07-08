@@ -53,6 +53,25 @@ export const emergencyResetSchema = z.object({
   confirmText: z.literal('STERGE TOTI ADMINII', 'Scrie exact fraza de confirmare'),
 });
 
+export const contactSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Numele este obligatoriu')
+    .max(120, 'Numele este prea lung'),
+  contact: z
+    .string()
+    .trim()
+    .min(1, 'Emailul este obligatoriu')
+    .email('Introdu o adresa de email valida')
+    .max(160, 'Emailul este prea lung'),
+  question: z
+    .string()
+    .trim()
+    .min(1, 'Intrebarea este obligatorie')
+    .max(2000, 'Intrebarea este prea lunga'),
+});
+
 export type FormErrors = Record<string, string>;
 
 export function toFormErrors(error: z.ZodError): FormErrors {
