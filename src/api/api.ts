@@ -69,6 +69,12 @@ export interface EmergencyAdminResetPayload {
   recoveryToken: string;
 }
 
+export interface ContactRequestPayload {
+  name: string;
+  contact: string;
+  question: string;
+}
+
 export interface CreateArticlePayload {
   title?: string;
   image: string;
@@ -282,6 +288,13 @@ export async function requestPasswordReset(payload: ForgotPasswordPayload): Prom
 
 export async function resetPassword(payload: ResetPasswordPayload): Promise<{ ok: boolean }> {
   return requestJson<{ ok: boolean }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitContactRequest(payload: ContactRequestPayload): Promise<{ ok: boolean }> {
+  return requestJson<{ ok: boolean }>('/api/contact', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

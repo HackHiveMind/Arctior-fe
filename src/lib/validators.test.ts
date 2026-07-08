@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emailSchema, passwordSchema, registerSchema, resetPasswordSchema } from './validators';
+import { contactSchema, emailSchema, passwordSchema, registerSchema, resetPasswordSchema } from './validators';
 
 describe('validators', () => {
   it('accepta email valid si respinge email invalid', () => {
@@ -23,5 +23,33 @@ describe('validators', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it('valideaza formularul de contact', () => {
+    expect(
+      contactSchema.safeParse({
+        name: 'Ion Popescu',
+        contact: 'ion@example.com',
+        question: 'Vreau o oferta pentru mobilier la comanda.',
+      }).success,
+    ).toBe(true);
+
+    expect(
+      contactSchema.safeParse({
+        name: 'Ion Popescu',
+        contact: 'ion@example.com',
+        question: '',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('accepta doar email in formularul de contact', () => {
+    expect(
+      contactSchema.safeParse({
+        name: 'Ion Popescu',
+        contact: '+373 79 123 456',
+        question: 'Vreau o oferta pentru mobilier la comanda.',
+      }).success,
+    ).toBe(false);
   });
 });
